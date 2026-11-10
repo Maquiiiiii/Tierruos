@@ -99,6 +99,29 @@ class ImageSanitizerAndCompressor(context: Context) {
         }
     }
 
+    /** Generates a valid 96 x 96 (< 48 KB) WebP tray icon for newly created empty packs. */
+    suspend fun createDefaultTrayIcon(): CompressedImage = withContext(Dispatchers.IO) {
+        val placeholder = Bitmap.createBitmap(TRAY_ICON_EDGE, TRAY_ICON_EDGE, Bitmap.Config.ARGB_8888)
+        try {
+            placeholder.density = Bitmap.DENSITY_NONE
+            placeholder.setHasAlpha(true)
+            placeholder.eraseColor(Color.TRANSPARENT)
+            val canvas = Canvas(placeholder)
+            try {
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    style = Paint.Style.FILL
+                    color = Color.parseColor("#25D366")
+                }
+                canvas.drawRoundRect(RectF(16f, 24f, 80f, 76f), 14f, 14f, paint)
+            } finally {
+                canvas.setBitmap(null)
+            }
+            encodeEditorBitmap(placeholder, TRAY_ICON_EDGE, TRAY_ICON_MAX_BYTES, 0)
+        } finally {
+            placeholder.recycle()
+        }
+    }
+
     /** Re-draws an existing sticker onto a clean 512 x 512 ARGB_8888 transparent canvas with 16 px padding. */
     suspend fun rescaleStickerTo512(sourceBytes: ByteArray): CompressedImage = withContext(Dispatchers.IO) {
         val options = BitmapFactory.Options().apply {

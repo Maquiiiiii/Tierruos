@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_updater"
+    android:orientation="vertical"
+    android:padding="@dimen/space_24">
+
+    <!-- Scenario 1: Existing packs available -->
+    <LinearLayout
+        android:id="@+id/scenarioExistingPacks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/selectPackTitle"
+            style="@style/Widget.Tierruos.Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/select_pack_title"
+            android:textAppearance="@style/TextAppearance.Tierruos.Title"
+            android:textColor="@color/text_primary" />
+
+        <!-- Bounded container (max 260dp height) -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_16">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/destinationPacksRecycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:overScrollMode="never"
+                android:scrollbars="vertical" />
+        </FrameLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/createNewFolderButton"
+            style="@style/Widget.Tierruos.Button.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="@dimen/space_12"
+            android:text="@string/create_new_folder_button"
+            android:textColor="#25D366"
+            android:textStyle="bold"
+            app:cornerRadius="16dp"
+            app:strokeColor="#2E2E3A" />
+    </LinearLayout>
+
+    <!-- Scenario 2: No packs exist yet -->
+    <LinearLayout
+        android:id="@+id/scenarioEmptyPacks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginBottom="@dimen/space_12"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_folder_empty" />
+
+        <TextView
+            style="@style/Widget.Tierruos.Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/no_folders_title"
+            android:textAppearance="@style/TextAppearance.Tierruos.Title"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_8"
+            android:gravity="center"
+            android:text="@string/no_folders_body"
+            android:textAppearance="@style/TextAppearance.Tierruos.Body"
+            android:textColor="@color/text_secondary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/createFolderNowButton"
+            style="@style/Widget.Tierruos.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="@dimen/space_20"
+            android:text="@string/create_folder_now"
+            app:cornerRadius="16dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/cancelSelectPackButton"
+            style="@style/Widget.Tierruos.Button.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="@dimen/space_8"
+            android:text="@string/cancel_action"
+            app:cornerRadius="14dp" />
+    </LinearLayout>
+</LinearLayout>

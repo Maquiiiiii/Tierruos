@@ -53,6 +53,21 @@ class StickerFileRepository(context: Context, private val database: TierruosData
         publish(file, job) { database.createDraft(draft) }
     }
 
+    /** Creates an empty pack in tierruos.db with a valid 96x96 < 48 KB placeholder tray.webp. */
+    suspend fun createEmptyPack(
+        name: String,
+        publisher: String,
+        identifier: String = StickerStorageNames.newIdentifier(),
+        avoidCache: Boolean = false,
+    ): StickerPackDraft {
+        val trayBytes = ImageSanitizerAndCompressor(appContext).createDefaultTrayIcon().bytes
+        val resolvedName = name.trim().ifBlank { TierruosDatabaseHelper.INVISIBLE_NAME }
+        val resolvedPublisher = publisher.trim().ifBlank { TierruosDatabaseHelper.INVISIBLE_NAME }
+        val created = createDraft(resolvedName, resolvedPublisher, trayBytes, identifier, avoidCache)
+        notifyProviderChange(identifier)
+        return created
+    }
+
     /** Publishes a new draft with its first real sticker and matching tray in one SQL commit. */
     suspend fun createPackWithSticker(
         identifier: String,

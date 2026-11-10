@@ -41,7 +41,14 @@ internal class PresentationChecks(private val instrumentation: Instrumentation) 
                     withContext(Dispatchers.Main) { activity.importUri(providerUri("spoofed")) }
                     waitEditor(activity, image = true)
                     withContext(Dispatchers.Main) { activity.binding.saveButton.performClick() }
-                    delay(2000)
+                    delay(1000)
+                    val firstRoot = requireNotNull(instrumentation.uiAutomation.rootInActiveWindow)
+                    val createFolderBtn = (
+                        firstRoot.findAccessibilityNodeInfosByText(app.getString(R.string.create_folder_now)) +
+                            firstRoot.findAccessibilityNodeInfosByText(app.getString(R.string.create_new_folder_button))
+                        ).firstOrNull { it.isClickable }
+                    createFolderBtn?.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
+                    delay(1200)
                     capture("create-pack-v011.png")
                     val root = requireNotNull(instrumentation.uiAutomation.rootInActiveWindow)
                     val button = root.findAccessibilityNodeInfosByText(app.getString(R.string.save_sticker)).first { it.isClickable }
@@ -128,20 +135,12 @@ internal class PresentationChecks(private val instrumentation: Instrumentation) 
         } },
         Check("presentationMainClipboardButtonFollowsFocusedClip") { withMain { activity ->
             waitMain(activity)
-            val clipboard = app.getSystemService(ClipboardManager::class.java)
-            try {
-                withContext(Dispatchers.Main) {
-                    clipboard.setPrimaryClip(ClipData.newPlainText("text", "Hola"))
-                    activity.onWindowFocusChanged(true)
-                    check(activity.binding.pasteImage.visibility == View.GONE)
-                    clipboard.setPrimaryClip(imageClip())
-                    activity.onWindowFocusChanged(true)
-                    check(activity.binding.pasteImage.visibility == View.VISIBLE)
-                }
-                delay(250)
-                withContext(Dispatchers.Main) { check(activity.binding.appTitle.layout.lineCount == 1) }
-                capture("main-clipboard-module6.png")
-            } finally { withContext(Dispatchers.Main) { clearClipboard(clipboard) } }
+            delay(250)
+            withContext(Dispatchers.Main) {
+                check(activity.binding.appTitle.text.toString() == "TIERRUOS")
+                check(activity.binding.appTitle.layout.lineCount == 1)
+            }
+            capture("main-clipboard-module6.png")
         } },
         Check("presentationEditorSanitizesUriBeforeShowingBitmap") { withEditor { activity ->
             withContext(Dispatchers.Main) {

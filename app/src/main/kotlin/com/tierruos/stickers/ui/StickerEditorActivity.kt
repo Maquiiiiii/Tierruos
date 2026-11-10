@@ -53,6 +53,7 @@ class StickerEditorActivity : TierruosActivity() {
     private var lastSession: StickerCanvasView.Session? = null
     private var metricJob: Job? = null
     private var dialog: AlertDialog? = null
+    private var selectPackDialog: android.app.Dialog? = null
     private var loadingMessage = R.string.sanitizing_image
     private var pendingImport: String? = null
 
@@ -143,7 +144,9 @@ class StickerEditorActivity : TierruosActivity() {
         binding.textTool.setOnClickListener { if (!blocked() && canvas.hasImage) editText() }
         binding.undoTool.setOnClickListener { if (!blocked() && canvas.undo()) it.actionFeedback() }
         binding.saveButton.setOnClickListener {
-            if (!blocked() && canvas.hasImage) { if (packId == null) enterPackDetails() else saveSticker() }
+            if (!blocked() && canvas.hasImage) {
+                if (packId == null) openSelectDestinationDialog() else saveSticker()
+            }
         }
         binding.eraserSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -279,6 +282,44 @@ class StickerEditorActivity : TierruosActivity() {
         }
         modal.show()
         applyElevatedDialogSurface(modal)
+    }
+
+    private fun openSelectDestinationDialog() {
+        if (blocked() || !binding.stickerCanvas.hasImage) return
+        uiScope.launch {
+            val allPacks = try {
+                val result = mutableListOf<com.tierruos.stickers.data.model.StickerPackDraft>()
+                do {
+                    val page = repository.listPacks(200, result.size)
+                    result.addAll(page)
+                } while (page.size == 200)
+                result
+            } catch (canceled: CancellationException) {
+                throw canceled
+            } catch (error: Exception) {
+                notice(errorMessage(error))
+                return@launch
+            }
+            if (isFinishing || isDestroyed || blocked()) return@launch
+            selectPackDialog?.dismiss()
+            selectPackDialog = SelectDestinationPackDialog.show(
+                activity = this@StickerEditorActivity,
+                repository = repository,
+                scope = uiScope,
+                packs = allPacks,
+                onPackSelected = { chosenPack ->
+                    packId = chosenPack.identifier
+                    expectedVersion = chosenPack.imageDataVersion
+                    oldFileName = null
+                    saveSticker()
+                },
+                onCreateNewPackRequested = {
+                    enterPackDetails()
+                },
+            ).also { modal ->
+                modal.setOnDismissListener { selectPackDialog = null }
+            }
+        }
     }
 
     private fun enterPackDetails() {
@@ -424,7 +465,13 @@ class StickerEditorActivity : TierruosActivity() {
         lastBytes?.let { outState.putByteArray("checkpoint", it) }
         super.onSaveInstanceState(outState)
     }
-    override fun onDestroy() { dialog?.dismiss(); dialog = null; super.onDestroy() }
+    override fun onDestroy() {
+        selectPackDialog?.dismiss()
+        selectPackDialog = null
+        dialog?.dismiss()
+        dialog = null
+        super.onDestroy()
+    }
 
     companion object {
         const val INVISIBLE_NAME = "\u2800"

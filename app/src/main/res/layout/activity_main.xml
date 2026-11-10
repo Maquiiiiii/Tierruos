@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg_canvas">
 
-    <!-- Pack list with clipToPadding=false and paddingBottom=116dp so cards scroll above the floating navbar -->
+    <!-- Pack list with clipToPadding=false and paddingBottom=116dp so cards + footer scroll above the floating navbar -->
     <ListView
         android:id="@+id/packList"
         android:layout_width="match_parent"
@@ -18,7 +18,7 @@
         android:paddingBottom="@dimen/library_content_bottom"
         android:scrollbars="vertical" />
 
-    <!-- Empty state -->
+    <!-- Empty state (kept for compatibility, hidden by default since footer is always shown) -->
     <LinearLayout
         android:id="@+id/emptyState"
         android:layout_width="match_parent"
@@ -56,53 +56,40 @@
             app:icon="@drawable/ic_create" />
     </LinearLayout>
 
-    <!-- Top header bar -->
+    <!-- Top header bar: only uppercase "TIERRUOS" aligned to the left -->
     <LinearLayout
+        android:id="@+id/headerBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
         android:background="@color/bg_canvas"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="@dimen/space_16"
-        android:paddingTop="@dimen/space_8"
+        android:paddingTop="@dimen/space_10"
         android:paddingEnd="@dimen/space_16"
-        android:paddingBottom="@dimen/space_8">
+        android:paddingBottom="@dimen/space_10">
 
-        <TextView
+        <com.tierruos.stickers.ui.PaperUnfoldTitleView
             android:id="@+id/appTitle"
             style="@style/Widget.Tierruos.Title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:singleLine="true"
-            android:text="@string/app_name" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/pasteImage"
-            style="@style/Widget.Tierruos.Button.Secondary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/space_8"
-            android:text="@string/paste_image"
-            android:visibility="gone"
-            app:icon="@drawable/ic_paste"
-            app:iconGravity="textStart" />
-
-        <ImageButton
-            android:id="@+id/createPack"
-            style="@style/Widget.Tierruos.Tool"
-            android:layout_width="@dimen/touch_target_min"
-            android:layout_height="@dimen/touch_target_min"
-            android:background="@drawable/bg_circle_button"
-            android:contentDescription="@string/new_pack"
-            android:src="@drawable/ic_create"
-            app:tint="@color/text_primary" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="@string/title_tierruos_caps"
+            android:focusable="true"
+            android:letterSpacing="0.04"
+            android:paddingTop="4dp"
+            android:paddingEnd="@dimen/space_12"
+            android:paddingBottom="4dp"
+            android:singleLine="true"
+            android:text="@string/title_tierruos_caps"
+            android:textAllCaps="true"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Bottom floating dock: High-Contrast Animated Bottom Navbar only -->

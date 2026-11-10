@@ -13,6 +13,7 @@ import androidx.core.view.ViewCompat
 import com.tierruos.stickers.R
 import com.tierruos.stickers.data.model.StickerPackDraft
 import com.tierruos.stickers.data.repository.StickerFileRepository
+import com.tierruos.stickers.databinding.ItemCreatePackFooterBinding
 import com.tierruos.stickers.databinding.ItemStickerPackBinding
 import com.tierruos.stickers.databinding.ItemStickerThumbnailBinding
 import kotlinx.coroutines.CancellationException
@@ -26,16 +27,22 @@ import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 
 /**
- * Native ListView recycling, bounded thumbnail cache and at most two simultaneous decoders.
- * Each Bento card acts as a single clickable container with shared-element transition name
- * `pack_card_transition_${pack.identifier}`.
+ * Multi-view ListView adapter with bounded thumbnail cache and at most two simultaneous decoders:
+ * - VIEW_TYPE_PACK (0): Bento pack card acting as a single clickable container with transitionName
+ *   `pack_card_transition_${pack.identifier}`.
+ * - VIEW_TYPE_CREATE_PACK_FOOTER (1): Always rendered below the last pack (or as the only item when
+ *   no packs exist yet) with Bento styling (#131317, 1.5dp #2E2E3A border, 20dp radius, 64dp height),
+ *   green '+' icon (#25D366) and "Crear nuevo paquete" label.
  */
 class StickerPackAdapter(
     private val repository: StickerFileRepository,
     private val scope: CoroutineScope,
     private val onOpenPack: (StickerPackDraft, View) -> Unit,
+    private val onCreateNewPack: () -> Unit,
 ) : BaseAdapter() {
-    private data class Holder(val binding: ItemStickerPackBinding, var job: Job? = null)
+    private data class PackHolder(val binding: ItemStickerPackBinding, var job: Job? = null)
+    private data class FooterHolder(val binding: ItemCreatePackFooterBinding)
+
     private var packs = emptyList<StickerPackDraft>()
     private var selected: String? = null
     private var interactive = true
@@ -63,13 +70,47 @@ class StickerPackAdapter(
         cache.evictAll()
     }
 
-    override fun getCount(): Int = packs.size
-    override fun getItem(position: Int): StickerPackDraft = packs[position]
+    override fun getViewTypeCount(): Int = 2
+
+    override fun getItemViewType(position: Int): Int =
+        if (position < packs.size) VIEW_TYPE_PACK else VIEW_TYPE_CREATE_PACK_FOOTER
+
+    override fun getCount(): Int = packs.size + 1
+
+    override fun getItem(position: Int): Any =
+        if (position < packs.size) packs[position] else FOOTER_SENTINEL
+
     override fun getItemId(position: Int): Long = position.toLong()
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        val holder = convertView?.tag as? Holder
-            ?: Holder(ItemStickerPackBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
+        if (getItemViewType(position) == VIEW_TYPE_PACK) {
+            bindPackView(position, convertView, parent)
+        } else {
+            bindFooterView(convertView, parent)
+        }
+
+    private fun bindFooterView(convertView: View?, parent: ViewGroup): View {
+        val holder = convertView?.tag as? FooterHolder
+            ?: FooterHolder(
+                ItemCreatePackFooterBinding.inflate(
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false,
+                ),
+            ).also { it.binding.root.tag = it }
+
+        holder.binding.createPackFooterCard.setOnClickListener { view ->
+            if (interactive) {
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                onCreateNewPack()
+            }
+        }
+        return holder.binding.root
+    }
+
+    private fun bindPackView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val holder = convertView?.tag as? PackHolder
+            ?: PackHolder(ItemStickerPackBinding.inflate(LayoutInflater.from(parent.context), parent, false))
                 .also { it.binding.root.tag = it }
         holder.job?.let {
             it.cancel()
@@ -81,7 +122,7 @@ class StickerPackAdapter(
         }
         val rowScope = CoroutineScope(scope.coroutineContext + job)
         val binding = holder.binding
-        val pack = getItem(position)
+        val pack = packs[position]
         val context = parent.context
         val active = pack.identifier == selected
         val isAnonymous = pack.name.contains("\u2800") || pack.name.isBlank()
@@ -182,6 +223,10 @@ class StickerPackAdapter(
     }
 
     companion object {
+        const val VIEW_TYPE_PACK = 0
+        const val VIEW_TYPE_CREATE_PACK_FOOTER = 1
+        private val FOOTER_SENTINEL = Any()
+
         internal fun progressText(pack: StickerPackDraft, resources: android.content.res.Resources): String {
             val count = pack.stickers.size
             return if (count >= 3) {

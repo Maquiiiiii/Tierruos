@@ -4,16 +4,18 @@
 
 App nativa en Kotlin para crear stickers de WhatsApp rápido, sin anuncios, sin permisos raros y pesando menos de 4 MB.
 
-[Descargar APK universal (v0.1.6)](https://github.com/Maquiiiiii/Tierruos/releases/download/v0.1.6/Tierruos-universal.apk) · [Todas las versiones y SHA-256](https://github.com/Maquiiiiii/Tierruos/releases)
+[Descargar APK universal (v0.1.7)](https://github.com/Maquiiiiii/Tierruos/releases/download/v0.1.7/Tierruos-universal.apk) · [Todas las versiones y SHA-256](https://github.com/Maquiiiiii/Tierruos/releases)
 
-- **Versión actual:** `0.1.6` (`versionCode = 7`)
-- **Tamaño del APK firmado:** `1.470.246 bytes` (~1,47 MB)
+- **Versión actual:** `0.1.7` (`versionCode = 8`)
+- **Tamaño del APK firmado:** `1.486.967 bytes` (~1,49 MB)
 - **Requisitos:** Android 7.0 (API 24) o superior
 
 ## Qué hace
 
 - Importa imágenes desde la galería (Photo Picker del sistema) o directamente desde el portapapeles.
 - Permite recortar a mano alzada (lazo), borrar fondo, mover/rotar/escalar, agregar borde blanco y texto, con deshacer por pasos.
+- Cabecera con título `"TIERRUOS"` en mayúsculas y animación progresiva de letras de papel desplegable (`PaperUnfoldTitleView`), más botón Bento `"Crear nuevo paquete"` al pie de la lista de paquetes.
+- Flujo inteligente de guardado en el editor: guarda directamente si se abrió desde dentro de un paquete, o despliega la ventana flotante `"Guardar en carpeta"` (`SelectDestinationPackDialog`) cuando se crea desde la barra de navegación principal.
 - Incluye vista de detalle por pack (`StickerPackDetailActivity`) con transición `MaterialContainerTransform`, cuadrícula de 3 columnas con celda especial `+ Agregar Sticker`, mini-navbar flotante con animación de agua para editar/reemplazar in-place o eliminar stickers individuales y botón de borrado de pack mantenido con física de líquido (`LiquidHoldDeleteButton`).
 - Integra actualizador nativo desde GitHub Releases al tocar el título `"Tierruos"`, con confirmación manual, barra de descarga en tiempo real y verificación de firma ZIP/APK (`PK\x03\x04`).
 - Normaliza cada sticker a WebP de `512x512 px` con margen interno de `16 px`, fondo transparente y menos de `98 KB`.

@@ -2,6 +2,8 @@ package com.tierruos.stickers.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.drawable.InsetDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.HapticFeedbackConstants
@@ -9,14 +11,19 @@ import android.view.View
 import android.view.Window
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.ViewCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.shape.MaterialShapeDrawable
+import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.tierruos.stickers.R
 import com.tierruos.stickers.data.TierruosStorage
 import com.tierruos.stickers.data.model.StickerPackDraft
 import com.tierruos.stickers.databinding.ActivityMainBinding
+import com.tierruos.stickers.databinding.DialogPackDetailsBinding
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -25,13 +32,14 @@ class MainActivity : TierruosActivity() {
     internal lateinit var binding: ActivityMainBinding
         private set
     private val repository by lazy { TierruosStorage.get(this).repository }
-    private val clipboard by lazy { ClipboardImages(this) }
     private lateinit var adapter: StickerPackAdapter
     private var packs = emptyList<StickerPackDraft>()
     private var selected: String? = null
     private var working = false
     private var picking = false
+    private var titleUnfolded = false
     private var loadJob: Job? = null
+    private var createDialog: AlertDialog? = null
     private var loadingMessage = R.string.loading_packs
 
     private val picker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -70,6 +78,15 @@ class MainActivity : TierruosActivity() {
 
         selected = savedInstanceState?.getString("selected")
         picking = savedInstanceState?.getBoolean("picking") ?: false
+        titleUnfolded = savedInstanceState?.getBoolean("title_unfolded") ?: false
+
+        // Trigger the progressive paper-unfold animation once per initial MainActivity opening.
+        binding.appTitle.post {
+            if (!isFinishing && !isDestroyed) {
+                binding.appTitle.playUnfoldOnceIfAllowed(alreadyPlayed = titleUnfolded)
+                titleUnfolded = true
+            }
+        }
 
         adapter = StickerPackAdapter(
             repository = repository,
@@ -78,6 +95,9 @@ class MainActivity : TierruosActivity() {
                 selected = pack.identifier
                 adapter.submit(packs, selected)
                 openPackDetail(pack, sharedCardView)
+            },
+            onCreateNewPack = {
+                if (!busy()) showCreatePackDialog()
             },
         )
         binding.packList.adapter = adapter
@@ -102,9 +122,6 @@ class MainActivity : TierruosActivity() {
             }
         }
 
-        binding.createPack.setOnClickListener {
-            if (!busy()) openEditor()
-        }
         binding.emptyChoose.setOnClickListener {
             if (!busy()) {
                 picking = true
@@ -115,16 +132,6 @@ class MainActivity : TierruosActivity() {
                     picking = false
                     renderControls()
                     notice(errorMessage(error))
-                }
-            }
-        }
-        binding.pasteImage.setOnClickListener {
-            if (!busy()) {
-                if (clipboard.candidate() == null) {
-                    refreshClipboard()
-                    notice(R.string.clipboard_empty)
-                } else {
-                    openEditor(selected, paste = true)
                 }
             }
         }
@@ -149,17 +156,6 @@ class MainActivity : TierruosActivity() {
         }
     }
 
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus && ::binding.isInitialized) refreshClipboard()
-    }
-
-    private fun refreshClipboard() {
-        if (!hasWindowFocus()) return
-        binding.pasteImage.visibility = if (clipboard.candidate() != null) View.VISIBLE else View.GONE
-        renderControls()
-    }
-
     private fun busy(): Boolean = working || picking
 
     internal fun reload() {
@@ -177,7 +173,8 @@ class MainActivity : TierruosActivity() {
                 packs = result
                 if (packs.none { it.identifier == selected }) selected = packs.firstOrNull()?.identifier
                 adapter.submit(packs, selected)
-                binding.emptyState.visibility = if (packs.isEmpty()) View.VISIBLE else View.GONE
+                // Footer button ("Crear nuevo paquete") is always rendered at the bottom of packList
+                binding.emptyState.visibility = View.GONE
                 binding.loadError.visibility = View.GONE
             } catch (canceled: CancellationException) {
                 throw canceled
@@ -188,6 +185,70 @@ class MainActivity : TierruosActivity() {
             } finally {
                 working = false
                 renderControls()
+            }
+        }
+    }
+
+    private fun showCreatePackDialog() {
+        if (busy()) return
+        val content = DialogPackDetailsBinding.inflate(layoutInflater)
+        val modal = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_Tierruos_CreatePack)
+            .setTitle(R.string.new_pack)
+            .setView(content.root)
+            .setNegativeButton(R.string.cancel_action, null)
+            .setPositiveButton(R.string.create_pack_action, null)
+            .create()
+        modal.window?.setWindowAnimations(0)
+        createDialog = modal
+        modal.setOnDismissListener { createDialog = null }
+        modal.setOnShowListener {
+            modal.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val name = content.packName.text.toString().trim().ifBlank { StickerEditorActivity.INVISIBLE_NAME }
+                val publisher = content.publisher.text.toString().trim().ifBlank { StickerEditorActivity.INVISIBLE_NAME }
+                if (!busy()) {
+                    modal.dismiss()
+                    createEmptyPackAndReload(name, publisher)
+                }
+            }
+        }
+        modal.show()
+        applyElevatedDialogSurface(modal)
+    }
+
+    private fun applyElevatedDialogSurface(modal: AlertDialog) {
+        val surface = MaterialShapeDrawable().apply {
+            shapeAppearanceModel = ShapeAppearanceModel.builder()
+                .setAllCornerSizes(resources.getDimension(R.dimen.dialog_corner_radius))
+                .build()
+            fillColor = ColorStateList.valueOf(getColor(R.color.surface_dialog))
+            setStroke(
+                resources.getDimension(R.dimen.stroke_precision),
+                getColor(R.color.border_dialog),
+            )
+        }
+        modal.window?.setBackgroundDrawable(
+            InsetDrawable(surface, resources.getDimensionPixelSize(R.dimen.space_24)),
+        )
+    }
+
+    private fun createEmptyPackAndReload(name: String, publisher: String) {
+        if (busy()) return
+        uiScope.launch {
+            working = true
+            renderControls(R.string.saving_image)
+            try {
+                val created = repository.createEmptyPack(name, publisher)
+                selected = created.identifier
+                binding.packList.actionFeedback()
+                notice(R.string.pack_created)
+            } catch (canceled: CancellationException) {
+                throw canceled
+            } catch (error: Exception) {
+                notice(errorMessage(error))
+            } finally {
+                working = false
+                renderControls()
+                reload()
             }
         }
     }
@@ -241,8 +302,6 @@ class MainActivity : TierruosActivity() {
         binding.loading.root.visibility = if (working) View.VISIBLE else View.GONE
         binding.loading.message.setText(loadingMessage)
         binding.appTitle.isEnabled = !blocked
-        binding.createPack.isEnabled = !blocked
-        binding.pasteImage.isEnabled = !blocked
         binding.emptyChoose.isEnabled = !blocked
         binding.retryButton.isEnabled = !blocked
         binding.bottomNav.isEnabled = !blocked
@@ -260,10 +319,16 @@ class MainActivity : TierruosActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("selected", selected)
         outState.putBoolean("picking", picking)
+        outState.putBoolean("title_unfolded", titleUnfolded)
         super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
+        createDialog?.dismiss()
+        createDialog = null
+        if (::binding.isInitialized) {
+            binding.appTitle.cancelAndRelease()
+        }
         if (::adapter.isInitialized) adapter.dispose()
         super.onDestroy()
     }
