@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="canvas_feedback_duration_ms">180</integer>
+    <integer name="canvas_lasso_period_ms">720</integer>
+    <integer name="canvas_loading_period_ms">1000</integer>
+</resources>

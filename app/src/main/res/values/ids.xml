@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="canvas_undo" type="id" />
+    <item name="canvas_rotate" type="id" />
+    <item name="canvas_zoom_in" type="id" />
+    <item name="canvas_zoom_out" type="id" />
+</resources>

@@ -1,0 +1,24 @@
+Tierruos — Módulo 5
+Fecha de verificación: 2026-11-10 (America/Santiago)
+Gradle 8.13; AGP 8.13.2; Kotlin 2.3.10; JDK 17; compileSdk/targetSdk 35; minSdk 24.
+assembleDebug, assembleDebugAndroidTest, lintDebug, lintRelease, verifyReleaseApkSize: BUILD SUCCESSFUL.
+Android 35 x86_64 teléfono 1080x1920 / 420 dpi / fuente 1.0: 78 tests; 0 failures.
+Android 35 x86_64 tablet 1600x2560 / 240 dpi / fuente 1.3 / dark: 78 tests; 0 failures.
+19 pruebas de seguridad + 16 de lienzo + 22 de datos + 21 de IPC/exportación/diseño.
+Lint debug: 0 errores, 21 advertencias. Lint release: 0 errores, 38 advertencias.
+Advertencias visibles de recursos aún no consumidos en release, versiones disponibles y avisos previos; sin baseline ni supresiones globales.
+9 vectores XML comprobados: 24x24dp, trazo 2, extremos y uniones round.
+Manifest release: provider com.tierruos.stickers.provider.StickerContentProvider exportado, autoridad correcta, readPermission com.whatsapp.sticker.READ, sin URI grants.
+Manifest release: no contiene las Activity de preview ni el proveedor de fixtures.
+Sin permisos de almacenamiento/red ni dependencias adicionales.
+R8 conserva el nombre de StickerContentProvider y su constructor de framework.
+Llamada IPC desde adb shell: rechazada por SecurityException de la allowlist, comprobada sobre Binder entre UID distintos.
+Descriptores de assets comprobados como solo lectura; escrituras rechazadas, bytes y longitudes exactos.
+Intents de exportación probados con recorder debug y destinos explícitos; WhatsApp/Business no están instalados en el AVD AOSP.
+app-arm64-v8a-release-unsigned.apk: 721297 bytes
+app-armeabi-v7a-release-unsigned.apk: 721297 bytes
+app-universal-release-unsigned.apk: 721297 bytes
+app-x86_64-release-unsigned.apk: 721297 bytes
+Capturas nativas revisadas en teléfono, fuente 130 % y tablet. Una captura inicial con aviso de System UI del emulador se sustituyó por una captura limpia tras cerrar ese aviso; el foco final corresponde al catálogo.
+Restaurados font_scale 1.0, night no, tamaño 1080x1920 y densidad 420; emulador de pruebas cerrado.
+Pendiente: confirmación de incorporación dentro de WhatsApp/Business reales y ejecución en API 24–34.

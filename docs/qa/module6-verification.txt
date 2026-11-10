@@ -1,0 +1,29 @@
+Tierruos — Módulo 6
+Fecha de verificación: 2026-11-10 (America/Santiago)
+Gradle 8.13; AGP 8.13.2; Kotlin 2.3.10; JDK 17; compileSdk/targetSdk 35; minSdk 24.
+assembleDebug, assembleDebugAndroidTest, lintDebug, lintRelease, verifyReleaseApkSize: BUILD SUCCESSFUL.
+Android 35 x86_64, teléfono 1080x1920 / 420 dpi / fuente 1.0: 99 tests; 0 failures.
+Android 35 x86_64, teléfono 1080x1920 / 420 dpi / fuente 1.3 / dark: 99 tests; 0 failures.
+Android 35 x86_64, tablet 1600x2560 / 240 dpi / fuente 1.3 / dark: 99 tests; 0 failures.
+19 seguridad + 16 lienzo + 22 datos + 21 IPC/exportación/diseño + 21 presentación.
+Lint debug: 0 errores, 25 advertencias. Lint release: 0 errores, 24 advertencias.
+Advertencias visibles de versiones disponibles, icono de aplicación, alias de estilo, sugerencias UseKtx, constantes inlined ya revisadas, accesibilidad previa y scrim funcional con overdraw.
+Sin baseline, supresiones globales ni dependencias nuevas. Cuatro implementation: core-ktx, appcompat, material, coroutines-android.
+Manifest release: MainActivity exportada con MAIN/LAUNCHER; StickerEditorActivity no exportada.
+Provider de producción conserva autoridad, readPermission y grantUriPermissions=false; fixtures de debug ausentes de release.
+Sin permisos de almacenamiento, red ni consulta global de aplicaciones.
+ViewBinding en las Activities, filas, miniaturas, diálogos y overlay de carga; sin findViewById.
+Inputs URI del Photo Picker y portapapeles pasan por createSticker(uri) en IO antes del canvas. Importación hostil conserva el documento anterior.
+Portapapeles real probado con ClipboardManager y URI grants habilitados solo en el provider de fixtures de debug.
+Photo Picker ImageOnly probado con ActivityMonitor y resultado URI simulado; sin invocar galerías de terceros reales.
+Dos decodificadores de miniaturas como máximo, bitmaps de 256px y LruCache de 4 MiB.
+Probados: primer sticker/tray publicados juntos; adición; reemplazo que conserva emojis y retira archivo anterior; conflicto de versión; recreación de Activity con texto, undo y herramienta; recuperación del peso tras gesto solapado con debounce; fallo de selector y exportación sin bloqueo de controles.
+Capturas nativas revisadas en las tres configuraciones; el popup Copied de la captura de portapapeles pertenece a Android.
+ListView ocupa la ventana útil y el viewport visible supera el 75% en las configuraciones de prueba, excluyendo barras del sistema.
+Excepción geométrica explícita: el canvas completo 1:1 no puede ocupar >75% de un móvil 9:16. Se preservan proporción, márgenes y controles; no se afirma cumplimiento literal de ese porcentaje para los píxeles del cuadrado.
+app-arm64-v8a-release-unsigned.apk: 1138440 bytes
+app-armeabi-v7a-release-unsigned.apk: 1138440 bytes
+app-universal-release-unsigned.apk: 1138440 bytes
+app-x86_64-release-unsigned.apk: 1138440 bytes
+Restaurados tamaño 1080x1920, densidad 420, fuente 1.0 y night no; emulador de pruebas cerrado.
+Pendiente: WhatsApp/Business y proveedores de clipboard/galerías reales; API 24–34. La UI confirma incorporación solo tras RESULT_OK, nunca por abrir el Intent.

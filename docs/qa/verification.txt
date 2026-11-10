@@ -1,0 +1,14 @@
+Tierruos — Módulo 3
+Fecha de verificación: 2026-11-09 (America/Santiago)
+Gradle 8.13; AGP 8.13.2; Kotlin 2.3.10; JDK 17; compileSdk/targetSdk 35; minSdk 24.
+assembleDebug, assembleDebugAndroidTest, lintDebug, lintRelease, verifyReleaseApkSize: BUILD SUCCESSFUL.
+Android 35 x86_64 teléfono 1080x1920 / 420 dpi / font_scale 1.0: 35 tests; 0 failures.
+Android 35 x86_64 tablet 1600x2560 / 240 dpi / font_scale 1.3 / dark: 35 tests; 0 failures.
+Lint debug: 0 errores, 27 advertencias. Lint release: 0 errores, 26 advertencias.
+Revisión visual: componente, teléfono, carga con fuente 130 %, tablet. Capturas nativas sin retoques.
+Los ajustes del emulador se restauraron: font_scale 1.0, night no, tamaño 1080x1920, densidad 420.
+El host de previsualización y los fixtures no aparecen en el manifest release.
+app-arm64-v8a-release-unsigned.apk: 702245 bytes
+app-armeabi-v7a-release-unsigned.apk: 702245 bytes
+app-universal-release-unsigned.apk: 702245 bytes
+app-x86_64-release-unsigned.apk: 702245 bytes

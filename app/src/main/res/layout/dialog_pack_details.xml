@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="wrap_content" android:padding="@dimen/space_24" android:orientation="vertical">
+    <EditText android:id="@+id/packName" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:minHeight="@dimen/touch_target_min" android:hint="@string/name_pack_hint" android:maxLength="128"
+        android:inputType="textCapSentences" android:maxLines="2" android:autofillHints="" />
+    <EditText android:id="@+id/publisher" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_16" android:minHeight="@dimen/touch_target_min" android:maxLength="128"
+        android:hint="@string/publisher_hint" android:inputType="textCapWords" android:maxLines="2" android:autofillHints="" />
+</LinearLayout>

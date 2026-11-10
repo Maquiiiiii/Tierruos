@@ -1,0 +1,13 @@
+Error while accessing provider:com.tierruos.stickers.stickercontentprovider
+java.lang.SecurityException: Este proveedor solo admite Tierruos y WhatsApp.
+	at android.os.Parcel.createExceptionOrNull(Parcel.java:3242)
+	at android.os.Parcel.createException(Parcel.java:3226)
+	at android.os.Parcel.readException(Parcel.java:3209)
+	at android.database.DatabaseUtils.readExceptionFromParcel(DatabaseUtils.java:203)
+	at android.database.DatabaseUtils.readExceptionFromParcel(DatabaseUtils.java:155)
+	at android.content.ContentProviderProxy.call(ContentProviderNative.java:764)
+	at com.android.commands.content.Content$CallCommand.onExecute(Content.java:599)
+	at com.android.commands.content.Content$Command.execute(Content.java:522)
+	at com.android.commands.content.Content.main(Content.java:735)
+	at com.android.internal.os.RuntimeInit.nativeFinishInit(Native Method)
+	at com.android.internal.os.RuntimeInit.main(RuntimeInit.java:369)

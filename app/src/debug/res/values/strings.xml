@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="design_preview_title">Vista previa de estilos</string>
+    <string name="design_preview_body">Herramientas nativas para preparar tus stickers.</string>
+    <string name="design_preview_counter" translatable="false">3/30</string>
+    <string name="design_preview_metric" translatable="false">95 KB</string>
+    <string name="design_preview_error">No se pudo guardar. Inténtalo de nuevo.</string>
+    <string name="design_preview_primary">Ver estado de carga</string>
+    <string name="design_preview_secondary">Volver al editor</string>
+    <string name="design_preview_create">Crear</string>
+    <string name="design_preview_paste">Pegar del portapapeles</string>
+    <string name="design_preview_lasso">Recortar por lazo</string>
+    <string name="design_preview_eraser">Borrar</string>
+    <string name="design_preview_transform">Transformar</string>
+    <string name="design_preview_text">Añadir texto</string>
+    <string name="design_preview_outline">Aplicar borde</string>
+    <string name="design_preview_undo">Deshacer</string>
+    <string name="design_preview_export">Agregar a WhatsApp</string>
+</resources>

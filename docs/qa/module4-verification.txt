@@ -1,0 +1,14 @@
+Tierruos — Módulo 4
+Fecha de verificación: 2026-11-09 (America/Santiago)
+Gradle 8.13; AGP 8.13.2; Kotlin 2.3.10; JDK 17; compileSdk/targetSdk 35; minSdk 24.
+assembleDebug, assembleDebugAndroidTest, lintDebug, lintRelease, verifyReleaseApkSize: BUILD SUCCESSFUL.
+Android 35 x86_64, emulador Tierruos_API35: 57 tests; 0 failures.
+19 pruebas de seguridad + 16 de lienzo + 22 de datos y archivos.
+Lint debug: 0 errores, 27 advertencias. Lint release: 0 errores, 26 advertencias.
+Sin dependencias ni permisos adicionales.
+APIs de datos todavía sin punto de entrada de producción; R8 elimina código no referenciado.
+app-arm64-v8a-release-unsigned.apk: 702245 bytes
+app-armeabi-v7a-release-unsigned.apk: 702245 bytes
+app-universal-release-unsigned.apk: 702245 bytes
+app-x86_64-release-unsigned.apk: 702245 bytes
+Pendiente: ejecución nativa del módulo de datos en API 24–34.

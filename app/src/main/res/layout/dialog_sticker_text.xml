@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="wrap_content" android:padding="@dimen/space_24" android:orientation="vertical">
+    <EditText android:id="@+id/caption" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:minHeight="@dimen/touch_target_min" android:hint="@string/text_layer_hint" android:maxLength="160"
+        android:inputType="textCapSentences|textMultiLine" android:maxLines="4" android:autofillHints="" />
+</LinearLayout>

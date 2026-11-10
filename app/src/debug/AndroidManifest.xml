@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name="com.tierruos.stickers.ui.DesignPreviewActivity" android:exported="true" />
+        <provider
+            android:name="com.tierruos.stickers.security.FixtureImageProvider"
+            android:authorities="com.tierruos.stickers.test.sanitizer-inputs"
+            android:grantUriPermissions="true"
+            android:exported="false" />
+        <activity
+            android:name="com.tierruos.stickers.ui.CanvasPreviewActivity"
+            android:exported="true" />
+    </application>
+</manifest>

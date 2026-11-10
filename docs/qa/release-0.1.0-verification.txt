@@ -1,0 +1,17 @@
+Tierruos 0.1.0 — APK de distribución
+Fecha: 2026-11-10 (America/Santiago)
+Archivo: Tierruos-universal.apk
+Package: com.tierruos.stickers
+versionCode=1; versionName=0.1.0; minSdk=24; targetSdk=35.
+Tamaño firmado: 1143620 bytes.
+SHA-256 APK: 94c7e382afac580b040449b4e9761aacd185a4fc188ab93431a83df112a12d79
+Certificado: CN=Tierruos, RSA 3072.
+SHA-256 certificado: d90991b40d35c59406aa1c1c11648354f91f7664d5f6507e674cc7e5f5e94bf9
+apksigner verify: correcto, esquemas v2 y v3 válidos para minSdk 24.
+zipalign -c -P 16 4: correcto.
+APK no debuggable; sin componentes de fixtures.
+Instalación en AVD aislado Tierruos_Release_QA / Android 35 x86_64: Success.
+MainActivity: arranque COLD correcto.
+Navegación real Crear pack -> StickerEditorActivity: correcta; Guardar Sticker presente.
+Proceso activo y sin errores de AndroidRuntime durante la comprobación.
+Clave y contraseña de firma excluidas de Git; no se publican como assets.
