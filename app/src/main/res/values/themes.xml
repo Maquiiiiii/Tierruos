@@ -6,8 +6,23 @@
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Tierruos.Dialog</item>
-        <item name="buttonBarPositiveButtonStyle">@style/Widget.Tierruos.Button.Primary</item>
-        <item name="buttonBarNegativeButtonStyle">@style/Widget.Tierruos.Button.Secondary</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Tierruos.Button.Dialog.Primary</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Tierruos.Button.Dialog.Secondary</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+
+    <style name="Widget.Tierruos.Button.Dialog.Primary" parent="Widget.Tierruos.Button.Primary">
+        <item name="android:insetTop">6dp</item>
+        <item name="android:insetBottom">6dp</item>
+        <item name="android:insetLeft">6dp</item>
+        <item name="android:insetRight">6dp</item>
+    </style>
+
+    <style name="Widget.Tierruos.Button.Dialog.Secondary" parent="Widget.Tierruos.Button.Secondary">
+        <item name="android:insetTop">6dp</item>
+        <item name="android:insetBottom">6dp</item>
+        <item name="android:insetLeft">6dp</item>
+        <item name="android:insetRight">6dp</item>
     </style>
 
     <style name="MaterialAlertDialog.Tierruos" parent="MaterialAlertDialog.MaterialComponents">

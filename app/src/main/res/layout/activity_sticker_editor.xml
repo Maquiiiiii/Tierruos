@@ -197,7 +197,7 @@
             </LinearLayout>
         </HorizontalScrollView>
 
-        <!-- Primary solid CTA "+ Guardar Sticker" (#25D366) -->
+        <!-- Primary solid CTA "Guardar Sticker" (#25D366) with single large '+' icon -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/saveButton"
             style="@style/Widget.Tierruos.Button.Primary"
@@ -207,9 +207,12 @@
             android:layout_marginTop="@dimen/space_12"
             android:layout_marginEnd="@dimen/space_16"
             android:layout_marginBottom="@dimen/elevation_none"
+            android:gravity="center"
             android:text="@string/save_sticker_cta"
             app:icon="@drawable/ic_create"
-            app:iconGravity="textStart" />
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_8"
+            app:iconSize="@dimen/icon_size" />
 
         <!-- Secondary/tonal "Pegar imagen" button centered directly below "+ Guardar Sticker" -->
         <com.google.android.material.button.MaterialButton

@@ -377,6 +377,77 @@ internal class PresentationChecks(private val instrumentation: Instrumentation) 
                 withContext(Dispatchers.Main) { detail.finish() }
             }
         } },
+        Check("saveButtonSinglePlusIconAndCleanLabel") {
+            withEditor { activity ->
+                withContext(Dispatchers.Main) {
+                    val label = activity.binding.saveButton.text.toString()
+                    check(label == "Guardar Sticker" && !label.contains("+"))
+                    check(activity.binding.saveButton.icon != null)
+                }
+            }
+        },
+        Check("createPackAdaptiveActionsLayoutNeverClipsButtons") {
+            withContext(Dispatchers.Main) {
+                val content = com.tierruos.stickers.databinding.DialogPackDetailsBinding.inflate(
+                    android.view.LayoutInflater.from(app),
+                )
+                val wideSpec = View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY)
+                val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                content.root.measure(wideSpec, unspecified)
+                content.root.layout(0, 0, content.root.measuredWidth, content.root.measuredHeight)
+                check(content.cancelButton.measuredHeight >= (48 * app.resources.displayMetrics.density).toInt())
+                check(content.confirmButton.measuredHeight >= (48 * app.resources.displayMetrics.density).toInt())
+                check(content.cancelButton.right < content.confirmButton.left)
+
+                // Narrow width forces stacked layout without clipping labels
+                val narrowSpec = View.MeasureSpec.makeMeasureSpec(420, View.MeasureSpec.EXACTLY)
+                content.root.measure(narrowSpec, unspecified)
+                content.root.layout(0, 0, content.root.measuredWidth, content.root.measuredHeight)
+                check(content.confirmButton.bottom < content.cancelButton.top)
+            }
+        },
+        Check("githubUpdaterReleaseParsingAndAssetValidation") {
+            val validPayload = """
+                {
+                  "tag_name": "v9.9.9",
+                  "assets": [
+                    {
+                      "name": "Tierruos-universal.apk",
+                      "size": 1486967,
+                      "browser_download_url": "https://github.com/Maquiiiiii/Tierruos/releases/download/v9.9.9/Tierruos-universal.apk"
+                    }
+                  ]
+                }
+            """.trimIndent()
+            val newer = com.tierruos.stickers.update.GitHubUpdater.parseReleaseJson(validPayload, "0.1.7")
+            check(newer.updateAvailable && newer.latestVersion == "9.9.9")
+            check(newer.downloadUrl == "https://github.com/Maquiiiiii/Tierruos/releases/download/v9.9.9/Tierruos-universal.apk")
+
+            val upToDate = com.tierruos.stickers.update.GitHubUpdater.parseReleaseJson(validPayload, "9.9.9")
+            check(!upToDate.updateAvailable)
+
+            val missingAssetPayload = """
+                {
+                  "tag_name": "v9.9.9",
+                  "assets": [
+                    {
+                      "name": "SHA256SUMS.txt",
+                      "size": 90,
+                      "browser_download_url": "https://github.com/Maquiiiiii/Tierruos/releases/download/v9.9.9/SHA256SUMS.txt"
+                    }
+                  ]
+                }
+            """.trimIndent()
+            var missingThrown = false
+            try {
+                com.tierruos.stickers.update.GitHubUpdater.parseReleaseJson(missingAssetPayload, "0.1.7")
+            } catch (_: com.tierruos.stickers.update.GitHubUpdater.MissingApkAssetException) {
+                missingThrown = true
+            }
+            check(missingThrown)
+            check(!com.tierruos.stickers.update.GitHubUpdater.isValidAssetDownloadUrl("https://github.com/Maquiiiiii/Tierruos/blob/main/README.md"))
+            check(!com.tierruos.stickers.update.GitHubUpdater.isValidAssetDownloadUrl("https://github.com/Maquiiiiii/Tierruos/releases/tag/v0.1.7"))
+        },
     )
 
     private suspend fun images(): List<ByteArray> {

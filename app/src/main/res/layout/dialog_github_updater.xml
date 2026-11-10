@@ -59,13 +59,15 @@
             android:textColor="@color/text_secondary" />
     </LinearLayout>
 
-    <!-- State 2 & 3: Status / Release Notes -->
+    <!-- State 2 & 3: Concise Status / Version Summary (no README or release notes) -->
     <LinearLayout
         android:id="@+id/stateResult"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_16"
+        android:background="@drawable/bg_detail_sticker_slot"
         android:orientation="vertical"
+        android:padding="@dimen/space_16"
         android:visibility="gone">
 
         <TextView
@@ -76,32 +78,26 @@
             android:textAppearance="@style/TextAppearance.Tierruos.CardTitle"
             android:textColor="@color/text_primary" />
 
-        <ScrollView
-            android:id="@+id/releaseNotesScroll"
+        <TextView
+            android:id="@+id/updaterVersionDetail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_12"
-            android:background="@drawable/bg_detail_sticker_slot"
-            android:maxHeight="180dp"
-            android:padding="@dimen/space_12"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/updaterReleaseNotes"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.Tierruos.Caption"
-                android:textColor="@color/text_secondary" />
-        </ScrollView>
+            android:layout_marginTop="4dp"
+            android:fontFeatureSettings="tnum"
+            android:textAppearance="@style/TextAppearance.Tierruos.Caption"
+            android:textColor="@color/text_secondary"
+            android:visibility="gone" />
     </LinearLayout>
 
-    <!-- State 4: Live Download Progress -->
+    <!-- State 4: Live Download Progress inside the same window -->
     <LinearLayout
         android:id="@+id/stateDownloading"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_16"
+        android:background="@drawable/bg_detail_sticker_slot"
         android:orientation="vertical"
+        android:padding="@dimen/space_16"
         android:visibility="gone">
 
         <TextView
@@ -147,7 +143,8 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginBottom="@dimen/space_8"
-            android:text="@string/updater_update_now_no_size"
+            android:minHeight="@dimen/touch_target_min"
+            android:text="@string/updater_download_cta"
             android:visibility="gone"
             app:cornerRadius="16dp" />
 
@@ -156,6 +153,7 @@
             style="@style/Widget.Tierruos.Button.Secondary"
             android:layout_width="match_parent"
             android:layout_height="48dp"
+            android:minHeight="@dimen/touch_target_min"
             android:text="@string/updater_close"
             app:cornerRadius="14dp" />
     </LinearLayout>

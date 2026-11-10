@@ -13,8 +13,8 @@ android {
         applicationId = "com.tierruos.stickers"
         minSdk = 24
         targetSdk = 35
-        versionCode = 8
-        versionName = "0.1.7"
+        versionCode = 9
+        versionName = "0.1.8"
         testInstrumentationRunner = "com.tierruos.stickers.security.SanitizerInstrumentation"
     }
 

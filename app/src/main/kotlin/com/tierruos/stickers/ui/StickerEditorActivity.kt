@@ -53,6 +53,7 @@ class StickerEditorActivity : TierruosActivity() {
     private var lastSession: StickerCanvasView.Session? = null
     private var metricJob: Job? = null
     private var dialog: AlertDialog? = null
+    private var dialogConfirmButton: View? = null
     private var selectPackDialog: android.app.Dialog? = null
     private var loadingMessage = R.string.sanitizing_image
     private var pendingImport: String? = null
@@ -267,17 +268,30 @@ class StickerEditorActivity : TierruosActivity() {
 
     private fun editText() {
         val content = DialogStickerTextBinding.inflate(layoutInflater)
+        content.dialogTitle.setText(R.string.text_layer_title)
         content.caption.setText(binding.stickerCanvas.textLayer)
-        val modal = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_Tierruos_CreatePack).setTitle(R.string.text_layer_title).setView(content.root)
-            .setNegativeButton(R.string.cancel_action, null).setPositiveButton(R.string.apply_action, null).create()
+        content.confirmButton.setText(R.string.apply_action)
+
+        val modal = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_Tierruos_CreatePack)
+            .setView(content.root)
+            .create()
+        modal.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         dialog = modal
-        modal.setOnDismissListener { dialog = null }
-        modal.setOnShowListener {
-            modal.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                if (!blocked()) try {
-                    binding.stickerCanvas.setTextLayer(content.caption.text.toString())
-                    binding.textTool.actionFeedback(); modal.dismiss()
-                } catch (_: IllegalArgumentException) { content.caption.error = getString(R.string.text_does_not_fit) }
+        dialogConfirmButton = content.confirmButton
+        modal.setOnDismissListener {
+            dialog = null
+            dialogConfirmButton = null
+        }
+        content.cancelButton.setOnClickListener {
+            modal.dismiss()
+        }
+        content.confirmButton.setOnClickListener {
+            if (!blocked()) try {
+                binding.stickerCanvas.setTextLayer(content.caption.text.toString())
+                binding.textTool.actionFeedback()
+                modal.dismiss()
+            } catch (_: IllegalArgumentException) {
+                content.caption.error = getString(R.string.text_does_not_fit)
             }
         }
         modal.show()
@@ -324,17 +338,29 @@ class StickerEditorActivity : TierruosActivity() {
 
     private fun enterPackDetails() {
         val content = DialogPackDetailsBinding.inflate(layoutInflater)
+        content.dialogTitle.setText(R.string.new_pack)
+        content.confirmButton.setText(R.string.save_sticker)
 
-        val modal = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_Tierruos_CreatePack).setTitle(R.string.new_pack).setView(content.root)
-            .setNegativeButton(R.string.cancel_action, null).setPositiveButton(R.string.save_sticker, null).create()
+        val modal = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_Tierruos_CreatePack)
+            .setView(content.root)
+            .create()
         modal.window?.setWindowAnimations(0)
+        modal.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         dialog = modal
-        modal.setOnDismissListener { dialog = null }
-        modal.setOnShowListener {
-            modal.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val name = content.packName.text.toString().trim().ifBlank { INVISIBLE_NAME }
-                val publisher = content.publisher.text.toString().trim().ifBlank { INVISIBLE_NAME }
-                if (!blocked()) { modal.dismiss(); saveSticker(name, publisher) }
+        dialogConfirmButton = content.confirmButton
+        modal.setOnDismissListener {
+            dialog = null
+            dialogConfirmButton = null
+        }
+        content.cancelButton.setOnClickListener {
+            modal.dismiss()
+        }
+        content.confirmButton.setOnClickListener {
+            val name = content.packName.text.toString().trim().ifBlank { INVISIBLE_NAME }
+            val publisher = content.publisher.text.toString().trim().ifBlank { INVISIBLE_NAME }
+            if (!blocked()) {
+                modal.dismiss()
+                saveSticker(name, publisher)
             }
         }
         modal.show()
@@ -352,7 +378,7 @@ class StickerEditorActivity : TierruosActivity() {
             )
         }
         modal.window?.setBackgroundDrawable(
-            android.graphics.drawable.InsetDrawable(surface, resources.getDimensionPixelSize(R.dimen.space_24)),
+            android.graphics.drawable.InsetDrawable(surface, resources.getDimensionPixelSize(R.dimen.space_16)),
         )
     }
 
@@ -443,6 +469,7 @@ class StickerEditorActivity : TierruosActivity() {
         binding.eraserSize.visibility = if (binding.stickerCanvas.mode == StickerCanvasView.MODE_ERASER) View.VISIBLE else View.GONE
         binding.eraserSize.isEnabled = !blocked
         dialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled = !blocked
+        dialogConfirmButton?.isEnabled = !blocked
         binding.stickerCanvas.isEnabled = !task && !picking
     }
     private fun leaveEditor() {

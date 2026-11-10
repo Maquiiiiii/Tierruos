@@ -21,18 +21,21 @@ import org.json.JSONObject
 
 /**
  * Zero-dependency GitHub Releases client using HttpsURLConnection and org.json.JSONObject.
- * Checks https://api.github.com/repos/Maquiiiiii/Tierruos/releases/latest, compares semantic
- * version strings, streams Tierruos-universal.apk to cacheDir/updates/Tierruos-universal.apk,
- * verifies the ZIP/APK magic header (PK\x03\x04), and launches the system package installer.
+ * Queries https://api.github.com/repos/Maquiiiiii/Tierruos/releases/latest, compares semantic
+ * version strings, resolves browser_download_url strictly from the "Tierruos-universal.apk" asset,
+ * streams the APK to cacheDir/updates/Tierruos-universal.apk, verifies the ZIP/APK magic header
+ * (PK\x03\x04), and launches the system package installer via FileProvider.
  */
 class GitHubUpdater(private val context: Context) {
+
+    class MissingApkAssetException(val tagName: String) :
+        IOException("La release $tagName no incluye el asset $APK_ASSET_NAME.")
 
     data class ReleaseInfo(
         val installedVersion: String,
         val latestVersion: String,
         val tagName: String,
-        val releaseNotes: String,
-        val downloadUrl: String,
+        val downloadUrl: String?,
         val assetSizeBytes: Long,
         val updateAvailable: Boolean,
     )
@@ -75,38 +78,7 @@ class GitHubUpdater(private val context: Context) {
                 throw IOException("GitHub API devolvió HTTP $status")
             }
             val payload = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-            val json = JSONObject(payload)
-            val tagName = json.optString("tag_name", "").trim()
-            val cleanLatest = normalizeVersion(tagName)
-            val body = json.optString("body", "").trim()
-
-            var downloadUrl = FALLBACK_DOWNLOAD_URL
-            var sizeBytes = 0L
-            val assets = json.optJSONArray("assets")
-            if (assets != null) {
-                for (i in 0 until assets.length()) {
-                    val asset = assets.optJSONObject(i) ?: continue
-                    val name = asset.optString("name", "")
-                    if (name == APK_ASSET_NAME || name.endsWith(".apk", ignoreCase = true)) {
-                        val browserUrl = asset.optString("browser_download_url", "")
-                        if (browserUrl.isNotBlank()) {
-                            downloadUrl = browserUrl
-                            sizeBytes = asset.optLong("size", 0L)
-                            if (name == APK_ASSET_NAME) break
-                        }
-                    }
-                }
-            }
-
-            ReleaseInfo(
-                installedVersion = normalizeVersion(installed),
-                latestVersion = cleanLatest.ifEmpty { normalizeVersion(installed) },
-                tagName = tagName.ifEmpty { "v$installed" },
-                releaseNotes = body,
-                downloadUrl = downloadUrl,
-                assetSizeBytes = sizeBytes,
-                updateAvailable = isRemoteNewer(installed, cleanLatest),
-            )
+            parseReleaseJson(payload, installed)
         } finally {
             connection.disconnect()
         }
@@ -116,6 +88,9 @@ class GitHubUpdater(private val context: Context) {
         release: ReleaseInfo,
         onProgress: (DownloadProgress) -> Unit,
     ): File = withContext(Dispatchers.IO) {
+        val initialUrl = release.downloadUrl?.takeIf { isValidAssetDownloadUrl(it) }
+            ?: throw MissingApkAssetException(release.tagName)
+
         val job = currentCoroutineContext()
         val updatesDir = File(context.cacheDir, "updates")
         if (!updatesDir.exists() && !updatesDir.mkdirs()) {
@@ -125,13 +100,17 @@ class GitHubUpdater(private val context: Context) {
         val tempFile = File(updatesDir, "$APK_ASSET_NAME.part")
         if (tempFile.exists()) tempFile.delete()
 
-        var currentUrl = release.downloadUrl
+        var currentUrl = initialUrl
         var redirects = 0
         var connection: HttpsURLConnection? = null
         try {
             while (redirects < 6) {
                 job.ensureActive()
-                val conn = (URL(currentUrl).openConnection() as HttpsURLConnection).apply {
+                val parsedUrl = URL(currentUrl)
+                if (!parsedUrl.protocol.equals("https", ignoreCase = true)) {
+                    throw SecurityException("Solo se admiten descargas HTTPS para la actualización.")
+                }
+                val conn = (parsedUrl.openConnection() as HttpsURLConnection).apply {
                     requestMethod = "GET"
                     connectTimeout = 15_000
                     readTimeout = 20_000
@@ -152,7 +131,7 @@ class GitHubUpdater(private val context: Context) {
                     val location = conn.getHeaderField("Location")
                         ?: throw IOException("Redirección sin cabecera Location.")
                     conn.disconnect()
-                    currentUrl = location
+                    currentUrl = URL(parsedUrl, location).toString()
                     redirects++
                     continue
                 }
@@ -240,8 +219,59 @@ class GitHubUpdater(private val context: Context) {
 
     companion object {
         const val LATEST_RELEASE_API_URL = "https://api.github.com/repos/Maquiiiiii/Tierruos/releases/latest"
-        const val FALLBACK_DOWNLOAD_URL = "https://github.com/Maquiiiiii/Tierruos/releases/latest/download/Tierruos-universal.apk"
         const val APK_ASSET_NAME = "Tierruos-universal.apk"
+
+        internal fun parseReleaseJson(payload: String, installedRaw: String): ReleaseInfo {
+            val json = JSONObject(payload)
+            val tagName = json.optString("tag_name", "").trim()
+            val cleanLatest = normalizeVersion(tagName)
+            if (cleanLatest.isEmpty()) {
+                throw IOException("La respuesta de GitHub Releases no contiene un tag_name válido.")
+            }
+
+            var resolvedUrl: String? = null
+            var sizeBytes = 0L
+            val assets = json.optJSONArray("assets")
+            if (assets != null) {
+                for (i in 0 until assets.length()) {
+                    val asset = assets.optJSONObject(i) ?: continue
+                    val name = asset.optString("name", "").trim()
+                    if (name == APK_ASSET_NAME) {
+                        val browserUrl = asset.optString("browser_download_url", "").trim()
+                        if (isValidAssetDownloadUrl(browserUrl)) {
+                            resolvedUrl = browserUrl
+                            sizeBytes = asset.optLong("size", 0L).coerceAtLeast(0L)
+                            break
+                        }
+                    }
+                }
+            }
+
+            val updateAvailable = isRemoteNewer(installedRaw, cleanLatest)
+            if (updateAvailable && resolvedUrl == null) {
+                throw MissingApkAssetException(tagName.ifEmpty { "v$cleanLatest" })
+            }
+
+            return ReleaseInfo(
+                installedVersion = normalizeVersion(installedRaw),
+                latestVersion = cleanLatest,
+                tagName = tagName.ifEmpty { "v$cleanLatest" },
+                downloadUrl = resolvedUrl,
+                assetSizeBytes = sizeBytes,
+                updateAvailable = updateAvailable,
+            )
+        }
+
+        internal fun isValidAssetDownloadUrl(url: String): Boolean {
+            if (!url.startsWith("https://", ignoreCase = true)) return false
+            val lower = url.lowercase()
+            if (lower.endsWith("/readme.md") || lower.contains("/blob/") || lower.contains("/tree/") ||
+                lower.contains("/archive/") || lower.contains("/tarball/") || lower.contains("/zipball/")
+            ) {
+                return false
+            }
+            return lower.endsWith(".apk")
+        }
 
         internal fun normalizeVersion(raw: String): String =
             raw.trim().removePrefix("v").removePrefix("V").trim()

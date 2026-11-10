@@ -192,23 +192,25 @@ class MainActivity : TierruosActivity() {
     private fun showCreatePackDialog() {
         if (busy()) return
         val content = DialogPackDetailsBinding.inflate(layoutInflater)
+        content.dialogTitle.setText(R.string.new_pack)
+        content.confirmButton.setText(R.string.create_pack_action)
+
         val modal = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_Tierruos_CreatePack)
-            .setTitle(R.string.new_pack)
             .setView(content.root)
-            .setNegativeButton(R.string.cancel_action, null)
-            .setPositiveButton(R.string.create_pack_action, null)
             .create()
         modal.window?.setWindowAnimations(0)
+        modal.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         createDialog = modal
         modal.setOnDismissListener { createDialog = null }
-        modal.setOnShowListener {
-            modal.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val name = content.packName.text.toString().trim().ifBlank { StickerEditorActivity.INVISIBLE_NAME }
-                val publisher = content.publisher.text.toString().trim().ifBlank { StickerEditorActivity.INVISIBLE_NAME }
-                if (!busy()) {
-                    modal.dismiss()
-                    createEmptyPackAndReload(name, publisher)
-                }
+        content.cancelButton.setOnClickListener {
+            modal.dismiss()
+        }
+        content.confirmButton.setOnClickListener {
+            val name = content.packName.text.toString().trim().ifBlank { StickerEditorActivity.INVISIBLE_NAME }
+            val publisher = content.publisher.text.toString().trim().ifBlank { StickerEditorActivity.INVISIBLE_NAME }
+            if (!busy()) {
+                modal.dismiss()
+                createEmptyPackAndReload(name, publisher)
             }
         }
         modal.show()
@@ -227,7 +229,7 @@ class MainActivity : TierruosActivity() {
             )
         }
         modal.window?.setBackgroundDrawable(
-            InsetDrawable(surface, resources.getDimensionPixelSize(R.dimen.space_24)),
+            InsetDrawable(surface, resources.getDimensionPixelSize(R.dimen.space_16)),
         )
     }
 

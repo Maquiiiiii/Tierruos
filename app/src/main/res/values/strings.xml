@@ -5,7 +5,7 @@
     <string name="nav_create">Crear un sticker</string>
     <string name="studio_title">Crear un sticker</string>
     <string name="new_sticker_action">+ Nuevo sticker</string>
-    <string name="save_sticker_cta">+ Guardar Sticker</string>
+    <string name="save_sticker_cta">Guardar Sticker</string>
     <string name="export_choose_whatsapp">Añadir pack a WhatsApp</string>
     <string name="paste_image">Pegar imagen</string>
     <string name="new_pack">Crear pack</string>
@@ -102,14 +102,21 @@
     <string name="updater_checking">Buscando actualizaciones en GitHub...</string>
     <string name="updater_up_to_date">Tienes la última versión instalada (v%1$s)</string>
     <string name="updater_available_title">Nueva versión disponible: %1$s</string>
+    <string name="updater_available_summary">Versión disponible: %1$s (%2$s MB)</string>
+    <string name="updater_available_summary_no_size">Versión disponible: %1$s</string>
     <string name="updater_current_version">Versión instalada: v%1$s</string>
-    <string name="updater_update_now">Actualizar ahora (%1$s MB)</string>
-    <string name="updater_update_now_no_size">Actualizar ahora</string>
+    <string name="updater_download_cta">Descargar actualización</string>
+    <string name="updater_install_ready_cta">Instalar actualización</string>
+    <string name="updater_update_now">Descargar actualización</string>
+    <string name="updater_update_now_no_size">Descargar actualización</string>
     <string name="updater_downloading">Descargando actualización...</string>
     <string name="updater_progress_metric">%1$d%% · %2$s MB / %3$s MB</string>
     <string name="updater_progress_indeterminate">%1$s MB descargados</string>
     <string name="updater_verifying">Verificando paquete e iniciando instalador...</string>
+    <string name="updater_completed">Descarga completada y verificada. Abriendo instalador…</string>
     <string name="updater_permission_needed">Autoriza instalar paquetes desde esta fuente para continuar.</string>
+    <string name="updater_missing_asset">La versión publicada (%1$s) no contiene el archivo Tierruos-universal.apk.</string>
+    <string name="updater_download_error">No se pudo descargar o verificar el paquete APK. Inténtalo de nuevo.</string>
     <string name="updater_error">No se pudo conectar con GitHub Releases. Inténtalo de nuevo.</string>
     <string name="updater_close">Cerrar</string>
     <string name="title_tierruos_caps" translatable="false">TIERRUOS</string>
