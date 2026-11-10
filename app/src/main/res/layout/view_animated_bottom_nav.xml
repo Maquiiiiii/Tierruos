@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/outerPill"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/navbar_height"
+    android:background="@drawable/bg_navbar_outer"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:padding="@dimen/navbar_padding">
+
+    <!-- Inner sliding active pill (exact 50% width via weightSum=2, 26dp inner radius = 32dp - 6dp) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <View
+            android:id="@+id/activeIndicator"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/bg_navbar_active_pill"
+            android:importantForAccessibility="no" />
+    </LinearLayout>
+
+    <!-- 2 Tabs with Vertical Layout (Icon Top + Text Bottom) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <!-- Tab 1: Mis packs de stickers -->
+        <LinearLayout
+            android:id="@+id/tabPacks"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/space_8"
+            android:paddingEnd="@dimen/space_8">
+
+            <LinearLayout
+                android:id="@+id/tabPacksContent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/iconPacks"
+                    android:layout_width="@dimen/navbar_icon_size"
+                    android:layout_height="@dimen/navbar_icon_size"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_nav_packs"
+                    app:tint="@color/text_on_accent" />
+
+                <TextView
+                    android:id="@+id/labelPacks"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_6"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-medium"
+                    android:singleLine="true"
+                    android:text="@string/nav_packs"
+                    android:textColor="@color/text_on_accent"
+                    android:textSize="@dimen/text_nav"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Tab 2: Crear un sticker -->
+        <LinearLayout
+            android:id="@+id/tabCreate"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/space_8"
+            android:paddingEnd="@dimen/space_8">
+
+            <LinearLayout
+                android:id="@+id/tabCreateContent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/iconCreate"
+                    android:layout_width="@dimen/navbar_icon_size"
+                    android:layout_height="@dimen/navbar_icon_size"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_nav_create"
+                    app:tint="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/labelCreate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_6"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-medium"
+                    android:singleLine="true"
+                    android:text="@string/nav_create"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_nav"
+                    android:textStyle="normal" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

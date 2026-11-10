@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Back stacked sheet -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M7,3.5H16.5C18.16,3.5 19.5,4.84 19.5,6.5V14.5"
+        android:strokeWidth="2"
+        android:strokeColor="#FAFAFA"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Front sticker sheet with folded bottom-right corner -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M4.5,9.5C4.5,7.84 5.84,6.5 7.5,6.5H13.5C15.16,6.5 16.5,7.84 16.5,9.5V15.5L12,20H7.5C5.84,20 4.5,18.66 4.5,17V9.5Z"
+        android:strokeWidth="2"
+        android:strokeColor="#FAFAFA"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Folded corner flap -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M11.5,20V16.5C11.5,15.67 12.17,15 13,15H16.5"
+        android:strokeWidth="2"
+        android:strokeColor="#FAFAFA"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Interior detail lines -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M8,10.5H13M8,13.5H10.5"
+        android:strokeWidth="2"
+        android:strokeColor="#FAFAFA"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

@@ -1,28 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
-    android:paddingStart="@dimen/space_16" android:paddingEnd="@dimen/space_16" android:paddingBottom="@dimen/space_16">
-    <com.google.android.material.card.MaterialCardView android:id="@+id/packCard" style="@style/Widget.Tierruos.Card"
-        android:layout_width="match_parent" android:layout_height="wrap_content" android:clickable="true" android:focusable="true"
-        app:cardPreventCornerOverlap="false" app:cardUseCompatPadding="false">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-            <TextView android:id="@+id/packName" style="@style/Widget.Tierruos.Title" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_margin="@dimen/space_8" />
-            <TextView android:id="@+id/publisher" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_8" android:layout_marginEnd="@dimen/space_8"
-                android:textAppearance="@style/TextAppearance.Tierruos.Caption" />
-            <GridLayout android:id="@+id/stickerGrid" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="0dp" android:columnCount="3" android:alignmentMode="alignMargins" />
-            <TextView android:id="@+id/packProgress" style="@style/Widget.Tierruos.Title" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_margin="@dimen/space_8"
-                android:textAppearance="@style/TextAppearance.Tierruos.Counter" android:fontFeatureSettings="tnum" />
-            <LinearLayout android:id="@+id/packActions" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:visibility="gone">
-                <com.google.android.material.button.MaterialButton android:id="@+id/newSticker" style="@style/Widget.Tierruos.Button.Secondary"
-                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-                    android:text="@string/new_sticker" app:icon="@drawable/ic_create" />
-                <com.google.android.material.button.MaterialButton android:id="@+id/deletePack" style="@style/Widget.Tierruos.Button.Secondary"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/delete_pack" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/space_16"
+    android:paddingEnd="@dimen/space_16"
+    android:paddingBottom="@dimen/space_16">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/packCard"
+        style="@style/Widget.Tierruos.Card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="@color/surface_card"
+        app:cardCornerRadius="@dimen/card_outer_radius"
+        app:cardElevation="@dimen/elevation_none"
+        app:cardPreventCornerOverlap="false"
+        app:cardUseCompatPadding="false"
+        app:contentPadding="@dimen/card_padding"
+        app:strokeColor="@color/border_card"
+        app:strokeWidth="@dimen/stroke_precision">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Title and author row (hidden completely with View.GONE if pack is anonymous) -->
+            <LinearLayout
+                android:id="@+id/packHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_12"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/packName"
+                    style="@style/Widget.Tierruos.Title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Tierruos.CardTitle"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/publisher"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textAppearance="@style/TextAppearance.Tierruos.Caption"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+            <!-- Real sticker thumbnail grid inside concentric 12dp slots -->
+            <GridLayout
+                android:id="@+id/stickerGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="0dp"
+                android:alignmentMode="alignMargins"
+                android:columnCount="3" />
+
+            <!-- Progress bar (4dp, #25D366) + tabular progress label -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:orientation="vertical">
+
+                <ProgressBar
+                    android:id="@+id/packProgressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/progress_track_height"
+                    android:importantForAccessibility="no"
+                    android:indeterminate="false"
+                    android:max="3"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/bg_pack_progress" />
+
+                <TextView
+                    android:id="@+id/packProgress"
+                    style="@style/Widget.Tierruos.Title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:fontFeatureSettings="tnum"
+                    android:textAppearance="@style/TextAppearance.Tierruos.Counter"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+            <!-- Tonal secondary actions for the selected pack -->
+            <LinearLayout
+                android:id="@+id/packActions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/newSticker"
+                    style="@style/Widget.Tierruos.Button.Secondary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/space_8"
+                    android:layout_weight="1"
+                    android:text="@string/new_sticker_action" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/deletePack"
+                    style="@style/Widget.Tierruos.Button.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/delete_pack"
+                    android:textColor="@color/text_secondary" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

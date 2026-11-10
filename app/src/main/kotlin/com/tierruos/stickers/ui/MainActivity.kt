@@ -81,10 +81,25 @@ class MainActivity : TierruosActivity() {
         }
         binding.retryButton.setOnClickListener { reload() }
         binding.exportButton.setOnClickListener { exportSelected() }
+        binding.bottomNav.onTabSelected = { tab ->
+            if (tab == AnimatedBottomNav.TAB_CREATE) {
+                if (!busy()) {
+                    openEditor()
+                } else {
+                    binding.bottomNav.setSelectedTab(AnimatedBottomNav.TAB_PACKS, animate = false)
+                }
+            }
+        }
         uiScope.launch { exporter.isExporting.collect { renderControls() } }
     }
 
-    override fun onResume() { super.onResume(); if (::binding.isInitialized && !awaitingExport) reload() }
+    override fun onResume() {
+        super.onResume()
+        if (::binding.isInitialized) {
+            binding.bottomNav.setSelectedTab(AnimatedBottomNav.TAB_PACKS, animate = false)
+            if (!awaitingExport) reload()
+        }
+    }
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && ::binding.isInitialized) refreshClipboard()
@@ -176,6 +191,7 @@ class MainActivity : TierruosActivity() {
         binding.pasteImage.isEnabled = !blocked
         binding.emptyChoose.isEnabled = !blocked
         binding.retryButton.isEnabled = !blocked
+        binding.bottomNav.isEnabled = !blocked
         binding.exportButton.isEnabled = !blocked && packs.any { it.identifier == selected && it.isExportable }
         binding.packList.importantForAccessibility = if (blocked) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
         if (::adapter.isInitialized) adapter.setInteractive(!blocked)

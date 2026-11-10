@@ -1,10 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="wrap_content" android:padding="@dimen/space_24" android:orientation="vertical">
-    <EditText android:id="@+id/packName" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:minHeight="@dimen/touch_target_min" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:hint="@string/name_pack_hint" android:maxLength="128"
-        android:inputType="textCapSentences" android:maxLines="2" android:autofillHints="" />
-    <EditText android:id="@+id/publisher" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_16" android:minHeight="@dimen/touch_target_min" android:maxLength="128"
-        android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:hint="@string/publisher_hint" android:inputType="textCapWords" android:maxLines="2" android:autofillHints="" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/space_24"
+    android:paddingTop="@dimen/space_16"
+    android:paddingEnd="@dimen/space_24"
+    android:paddingBottom="@dimen/space_8">
+
+    <EditText
+        android:id="@+id/packName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:background="@drawable/bg_dialog_input"
+        android:hint="@string/name_pack_hint"
+        android:inputType="textCapSentences"
+        android:maxLength="128"
+        android:maxLines="2"
+        android:minHeight="@dimen/touch_target_min"
+        android:paddingStart="@dimen/space_16"
+        android:paddingTop="@dimen/space_12"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingBottom="@dimen/space_12"
+        android:textAppearance="@style/TextAppearance.Tierruos.Body"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary" />
+
+    <EditText
+        android:id="@+id/publisher"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:autofillHints=""
+        android:background="@drawable/bg_dialog_input"
+        android:hint="@string/publisher_hint"
+        android:inputType="textCapWords"
+        android:maxLength="128"
+        android:maxLines="2"
+        android:minHeight="@dimen/touch_target_min"
+        android:paddingStart="@dimen/space_16"
+        android:paddingTop="@dimen/space_12"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingBottom="@dimen/space_12"
+        android:textAppearance="@style/TextAppearance.Tierruos.Body"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary" />
 </LinearLayout>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Rounded square sticker frame with open top-right corner for creation -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M13,4.5H7.5C5.57,4.5 4,6.07 4,8V16.5C4,18.43 5.57,20 7.5,20H16C17.93,20 19.5,18.43 19.5,16.5V11"
+        android:strokeWidth="2"
+        android:strokeColor="#FAFAFA"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Central creation plus -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M11.75,9.5V15M9,12.25H14.5"
+        android:strokeWidth="2"
+        android:strokeColor="#FAFAFA"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Top-right sparkle / plus symbol -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M18,3.5V7.5M16,5.5H20"
+        android:strokeWidth="2"
+        android:strokeColor="#FAFAFA"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

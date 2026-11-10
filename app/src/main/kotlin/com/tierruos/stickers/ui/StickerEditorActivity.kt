@@ -265,7 +265,7 @@ class StickerEditorActivity : TierruosActivity() {
     private fun editText() {
         val content = DialogStickerTextBinding.inflate(layoutInflater)
         content.caption.setText(binding.stickerCanvas.textLayer)
-        val modal = MaterialAlertDialogBuilder(this).setTitle(R.string.text_layer_title).setView(content.root)
+        val modal = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_Tierruos_CreatePack).setTitle(R.string.text_layer_title).setView(content.root)
             .setNegativeButton(R.string.cancel_action, null).setPositiveButton(R.string.apply_action, null).create()
         dialog = modal
         modal.setOnDismissListener { dialog = null }
@@ -278,6 +278,7 @@ class StickerEditorActivity : TierruosActivity() {
             }
         }
         modal.show()
+        applyElevatedDialogSurface(modal)
     }
 
     private fun enterPackDetails() {
@@ -296,12 +297,22 @@ class StickerEditorActivity : TierruosActivity() {
             }
         }
         modal.show()
+        applyElevatedDialogSurface(modal)
+    }
+
+    private fun applyElevatedDialogSurface(modal: AlertDialog) {
         val surface = com.google.android.material.shape.MaterialShapeDrawable().apply {
             shapeAppearanceModel = com.google.android.material.shape.ShapeAppearanceModel.builder()
-                .setAllCornerSizes(resources.getDimension(R.dimen.card_outer_radius)).build()
-            fillColor = android.content.res.ColorStateList.valueOf(getColor(R.color.surface))
+                .setAllCornerSizes(resources.getDimension(R.dimen.dialog_corner_radius)).build()
+            fillColor = android.content.res.ColorStateList.valueOf(getColor(R.color.surface_dialog))
+            setStroke(
+                resources.getDimension(R.dimen.stroke_precision),
+                getColor(R.color.border_dialog),
+            )
         }
-        modal.window?.setBackgroundDrawable(android.graphics.drawable.InsetDrawable(surface, resources.getDimensionPixelSize(R.dimen.space_32)))
+        modal.window?.setBackgroundDrawable(
+            android.graphics.drawable.InsetDrawable(surface, resources.getDimensionPixelSize(R.dimen.space_24)),
+        )
     }
 
     internal fun saveSticker(name: String = "", publisher: String = "") {
@@ -401,6 +412,7 @@ class StickerEditorActivity : TierruosActivity() {
     }
     private fun notice(message: Int) { Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).setAnchorView(binding.saveButton).show() }
 
+    @Deprecated("Retained across configuration changes via platform non-configuration instance")
     @Suppress("DEPRECATION")
     override fun onRetainCustomNonConfigurationInstance(): Any = Retained(lastSession, lastBytes, dirty, expectedVersion,
         newPackId, pendingFileName, binding.stickerCanvas.mode, binding.stickerCanvas.eraserWidthPx)

@@ -1,73 +1,231 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent" android:layout_height="match_parent">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal"
-            android:gravity="center_vertical" android:paddingStart="@dimen/space_8" android:paddingEnd="@dimen/space_16">
-            <ImageButton android:id="@+id/backButton" style="@style/Widget.Tierruos.Tool"
-                android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
-                android:src="@drawable/ic_back" android:contentDescription="@string/back_action" />
-            <TextView android:id="@+id/fileWeight" android:layout_width="0dp" android:layout_weight="1"
-                android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.Tierruos.Caption"
-                android:text="@string/metric_empty" android:accessibilityLiveRegion="polite" />
-</LinearLayout>
-        <com.tierruos.stickers.ui.SquareCanvasHost android:id="@+id/workspace" android:layout_width="match_parent"
-            android:layout_height="0dp" android:layout_weight="1" android:padding="@dimen/space_16">
-            <com.google.android.material.card.MaterialCardView android:id="@+id/canvasCard"
-                style="@style/Widget.Tierruos.Card" android:layout_width="match_parent" android:layout_height="match_parent"
-                app:cardPreventCornerOverlap="false" app:cardUseCompatPadding="false">
-                <com.tierruos.stickers.ui.StickerCanvasView android:id="@+id/stickerCanvas"
-                    android:layout_width="match_parent" android:layout_height="match_parent" />
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_canvas">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Clean header: circular back button on left + technical monospace/tnum pill on right -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_16"
+            android:paddingTop="@dimen/space_10"
+            android:paddingEnd="@dimen/space_16"
+            android:paddingBottom="@dimen/space_6">
+
+            <ImageButton
+                android:id="@+id/backButton"
+                style="@style/Widget.Tierruos.Tool"
+                android:layout_width="@dimen/touch_target_min"
+                android:layout_height="@dimen/touch_target_min"
+                android:background="@drawable/bg_circle_button"
+                android:contentDescription="@string/back_action"
+                android:src="@drawable/ic_back"
+                app:tint="@color/text_primary" />
+
+            <TextView
+                android:id="@+id/studioTitle"
+                style="@style/Widget.Tierruos.Title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_12"
+                android:layout_marginEnd="@dimen/space_12"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="@string/studio_title"
+                android:textSize="@dimen/text_card_title" />
+
+            <TextView
+                android:id="@+id/fileWeight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:accessibilityLiveRegion="polite"
+                android:background="@drawable/bg_metric_pill"
+                android:fontFamily="monospace"
+                android:fontFeatureSettings="tnum"
+                android:paddingStart="@dimen/space_12"
+                android:paddingTop="@dimen/space_6"
+                android:paddingEnd="@dimen/space_12"
+                android:paddingBottom="@dimen/space_6"
+                android:singleLine="true"
+                android:text="@string/metric_empty"
+                android:textAppearance="@style/TextAppearance.Tierruos.TechnicalMetric"
+                android:textColor="@color/text_primary" />
+        </LinearLayout>
+
+        <!-- Dominant StickerCanvasView (>75% visual prominence, 24dp radius, 1.5dp #2E2E3A stroke) -->
+        <com.tierruos.stickers.ui.SquareCanvasHost
+            android:id="@+id/workspace"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingStart="@dimen/space_16"
+            android:paddingTop="@dimen/space_8"
+            android:paddingEnd="@dimen/space_16"
+            android:paddingBottom="@dimen/space_8">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/canvasCard"
+                style="@style/Widget.Tierruos.CanvasCard"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="@dimen/canvas_corner_radius"
+                app:cardElevation="@dimen/elevation_none"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="false"
+                app:strokeColor="@color/border_navbar_outer"
+                app:strokeWidth="@dimen/stroke_accent">
+
+                <com.tierruos.stickers.ui.StickerCanvasView
+                    android:id="@+id/stickerCanvas"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
             </com.google.android.material.card.MaterialCardView>
         </com.tierruos.stickers.ui.SquareCanvasHost>
-        <SeekBar android:id="@+id/eraserSize" android:layout_width="match_parent" android:layout_height="@dimen/touch_target_min"
-            android:layout_marginStart="@dimen/space_16" android:layout_marginEnd="@dimen/space_16"
-            android:contentDescription="@string/eraser_size" android:max="124" android:progress="28" android:visibility="gone" />
-        <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:scrollbars="none" android:fillViewport="false" android:clipToPadding="false"
-            android:paddingStart="@dimen/space_16" android:paddingEnd="@dimen/space_16">
-            <LinearLayout android:id="@+id/tools" android:layout_width="wrap_content" android:layout_height="wrap_content"
+
+        <!-- Eraser width slider -->
+        <SeekBar
+            android:id="@+id/eraserSize"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/touch_target_min"
+            android:layout_marginStart="@dimen/space_20"
+            android:layout_marginEnd="@dimen/space_20"
+            android:contentDescription="@string/eraser_size"
+            android:max="124"
+            android:progress="28"
+            android:progressTint="@color/accent_primary"
+            android:thumbTint="@color/accent_primary"
+            android:visibility="gone" />
+
+        <!-- Editing tools grouped inside tonal capsule (#16161D, 20dp radius, 1dp #2A2A35 border) -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_marginEnd="@dimen/space_16"
+            android:background="@drawable/bg_toolbar_capsule"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:padding="@dimen/space_6"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/tools"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
                 android:orientation="horizontal">
-                <ImageButton android:id="@+id/transformTool" style="@style/Widget.Tierruos.Tool"
-                    android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_transform"
-                    app:tint="@color/tool_tint" android:contentDescription="@string/transform_tool" />
-                <ImageButton android:id="@+id/lassoTool" style="@style/Widget.Tierruos.Tool"
-                    android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_lasso"
-                    app:tint="@color/tool_tint" android:contentDescription="@string/lasso_tool" />
-                <ImageButton android:id="@+id/eraserTool" style="@style/Widget.Tierruos.Tool"
-                    android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_eraser"
-                    app:tint="@color/tool_tint" android:contentDescription="@string/eraser_tool" />
-                <ImageButton android:id="@+id/outlineTool" style="@style/Widget.Tierruos.Tool"
-                    android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_outline"
-                    app:tint="@color/tool_tint" android:contentDescription="@string/outline_tool" />
-                <ImageButton android:id="@+id/textTool" style="@style/Widget.Tierruos.Tool"
-                    android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_text"
-                    app:tint="@color/tool_tint" android:contentDescription="@string/text_tool" />
-                <ImageButton android:id="@+id/undoTool" style="@style/Widget.Tierruos.Tool"
-                    android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_undo"
-                    app:tint="@color/tool_tint" android:contentDescription="@string/undo_tool" />
-<ImageButton android:id="@+id/chooseTool" style="@style/Widget.Tierruos.Tool"
-                    android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_create"
-                    app:tint="@color/tool_tint" android:contentDescription="@string/choose_image" />
+
+                <ImageButton
+                    android:id="@+id/transformTool"
+                    style="@style/Widget.Tierruos.Tool"
+                    android:layout_width="@dimen/touch_target_min"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginEnd="@dimen/space_4"
+                    android:contentDescription="@string/transform_tool"
+                    android:src="@drawable/ic_transform"
+                    app:tint="@color/tool_tint" />
+
+                <ImageButton
+                    android:id="@+id/lassoTool"
+                    style="@style/Widget.Tierruos.Tool"
+                    android:layout_width="@dimen/touch_target_min"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginEnd="@dimen/space_4"
+                    android:contentDescription="@string/lasso_tool"
+                    android:src="@drawable/ic_lasso"
+                    app:tint="@color/tool_tint" />
+
+                <ImageButton
+                    android:id="@+id/eraserTool"
+                    style="@style/Widget.Tierruos.Tool"
+                    android:layout_width="@dimen/touch_target_min"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginEnd="@dimen/space_4"
+                    android:contentDescription="@string/eraser_tool"
+                    android:src="@drawable/ic_eraser"
+                    app:tint="@color/tool_tint" />
+
+                <ImageButton
+                    android:id="@+id/outlineTool"
+                    style="@style/Widget.Tierruos.Tool"
+                    android:layout_width="@dimen/touch_target_min"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginEnd="@dimen/space_4"
+                    android:contentDescription="@string/outline_tool"
+                    android:src="@drawable/ic_outline"
+                    app:tint="@color/tool_tint" />
+
+                <ImageButton
+                    android:id="@+id/textTool"
+                    style="@style/Widget.Tierruos.Tool"
+                    android:layout_width="@dimen/touch_target_min"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginEnd="@dimen/space_4"
+                    android:contentDescription="@string/text_tool"
+                    android:src="@drawable/ic_text"
+                    app:tint="@color/tool_tint" />
+
+                <ImageButton
+                    android:id="@+id/undoTool"
+                    style="@style/Widget.Tierruos.Tool"
+                    android:layout_width="@dimen/touch_target_min"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginEnd="@dimen/space_4"
+                    android:contentDescription="@string/undo_tool"
+                    android:src="@drawable/ic_undo"
+                    app:tint="@color/tool_tint" />
+
+                <ImageButton
+                    android:id="@+id/chooseTool"
+                    style="@style/Widget.Tierruos.Tool"
+                    android:layout_width="@dimen/touch_target_min"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:contentDescription="@string/choose_image"
+                    android:src="@drawable/ic_create"
+                    app:tint="@color/tool_tint" />
             </LinearLayout>
         </HorizontalScrollView>
-        <com.google.android.material.button.MaterialButton android:id="@+id/saveButton"
-            style="@style/Widget.Tierruos.Button.Primary" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_16" android:layout_marginEnd="@dimen/space_16"
-            android:layout_marginTop="@dimen/space_8" android:layout_marginBottom="@dimen/elevation_none"
-            android:text="@string/save_sticker" app:icon="@drawable/ic_create" app:iconGravity="textStart" />
-        <com.google.android.material.button.MaterialButton android:id="@+id/pasteImage"
-            style="@style/Widget.Tierruos.Button.Secondary" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/space_8" android:layout_marginBottom="@dimen/space_8"
-            android:text="@string/paste_image" app:icon="@drawable/ic_paste" app:iconGravity="textStart" />
+
+        <!-- Primary solid CTA "+ Guardar Sticker" (#25D366) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/saveButton"
+            style="@style/Widget.Tierruos.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_marginTop="@dimen/space_12"
+            android:layout_marginEnd="@dimen/space_16"
+            android:layout_marginBottom="@dimen/elevation_none"
+            android:text="@string/save_sticker_cta"
+            app:icon="@drawable/ic_create"
+            app:iconGravity="textStart" />
+
+        <!-- Secondary/tonal "Pegar imagen" button centered directly below "+ Guardar Sticker" -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/pasteImage"
+            style="@style/Widget.Tierruos.Button.Secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginBottom="@dimen/space_12"
+            android:text="@string/paste_image"
+            app:icon="@drawable/ic_paste"
+            app:iconGravity="textStart" />
     </LinearLayout>
-    <include android:id="@+id/loading" layout="@layout/view_busy_overlay" />
+
+    <include
+        android:id="@+id/loading"
+        layout="@layout/view_busy_overlay" />
 </FrameLayout>

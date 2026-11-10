@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">Tierruos</string>
+    <string name="nav_packs">Mis packs de stickers</string>
+    <string name="nav_create">Crear un sticker</string>
+    <string name="studio_title">Crear un sticker</string>
+    <string name="new_sticker_action">+ Nuevo sticker</string>
+    <string name="save_sticker_cta">+ Guardar Sticker</string>
     <string name="export_choose_whatsapp">Añadir pack a WhatsApp</string>
     <string name="paste_image">Pegar imagen</string>
     <string name="new_pack">Crear pack</string>

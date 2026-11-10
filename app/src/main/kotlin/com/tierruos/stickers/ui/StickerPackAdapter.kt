@@ -66,14 +66,18 @@ class StickerPackAdapter(
         val context = parent.context
         val active = pack.identifier == selected
         val isAnonymous = pack.name.contains("\u2800") || pack.name.isBlank()
+        val isPublisherAnonymous = pack.publisher.contains("\u2800") || pack.publisher.isBlank()
         binding.packName.text = pack.name
         binding.publisher.text = pack.publisher
         binding.packName.visibility = if (isAnonymous) View.GONE else View.VISIBLE
-        binding.publisher.visibility = if (isAnonymous || pack.publisher.contains("\u2800") || pack.publisher.isBlank()) View.GONE else View.VISIBLE
+        binding.publisher.visibility = if (isAnonymous || isPublisherAnonymous) View.GONE else View.VISIBLE
+        binding.packHeader.visibility = if (isAnonymous) View.GONE else View.VISIBLE
         binding.stickerGrid.layoutParams = (binding.stickerGrid.layoutParams as android.widget.LinearLayout.LayoutParams).apply {
-            topMargin = if (isAnonymous) 0
-                else context.resources.getDimensionPixelSize(R.dimen.space_16)
+            topMargin = 0
         }
+        binding.packCard.strokeColor = context.getColor(if (active) R.color.accent_primary else R.color.border_card)
+        binding.packProgressBar.max = 3
+        binding.packProgressBar.progress = pack.stickers.size.coerceIn(0, 3)
         binding.packProgress.text = progressText(pack, context.resources)
         binding.packActions.visibility = if (active) View.VISIBLE else View.GONE
         binding.newSticker.isEnabled = pack.stickers.size < 30

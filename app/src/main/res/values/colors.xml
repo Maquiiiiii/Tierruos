@@ -1,14 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background">#0E0E11</color>
-    <color name="surface">#18181C</color>
-    <color name="surface_interactive">#222228</color>
-    <color name="accent">#25D366</color>
-    <color name="text_primary">#F4F4F6</color>
+    <!-- Anti-Slop Design System Tokens -->
+    <color name="bg_canvas">#09090B</color>
+    <color name="surface_card">#131317</color>
+    <color name="border_card">#24242C</color>
+    <color name="surface_navbar_outer">#1C1C24</color>
+    <color name="border_navbar_outer">#2E2E3A</color>
+    <color name="surface_elevated">#1E1E26</color>
+    <color name="border_elevated">#2E2E38</color>
+    <color name="surface_toolbar">#16161D</color>
+    <color name="border_toolbar">#2A2A35</color>
+    <color name="surface_dialog">#16161D</color>
+    <color name="border_dialog">#2E2E3A</color>
+    <color name="surface_input">#20202A</color>
+    <color name="accent_primary">#25D366</color>
+    <color name="accent_tint_surface">#1F25D366</color>
+    <color name="text_primary">#FAFAFA</color>
     <color name="text_secondary">#A1A1AA</color>
+    <color name="text_on_accent">#09090B</color>
     <color name="error">#EF4444</color>
-    <color name="on_accent">#0E0E11</color>
-    <color name="canvas_checker_alternate">@color/surface_interactive</color>
+
+    <!-- Backward-compatible semantic aliases -->
+    <color name="background">@color/bg_canvas</color>
+    <color name="surface">@color/surface_card</color>
+    <color name="surface_interactive">@color/surface_elevated</color>
+    <color name="border_subtle">@color/border_card</color>
+    <color name="accent">@color/accent_primary</color>
+    <color name="on_accent">@color/text_on_accent</color>
+    <color name="canvas_checker_alternate">@color/surface_elevated</color>
     <color name="sticker_outline">#FFFFFF</color>
-    <color name="canvas_busy_scrim">#CC18181C</color>
+    <color name="canvas_busy_scrim">#D909090B</color>
 </resources>

@@ -4,10 +4,10 @@
 
 App nativa en Kotlin para crear stickers de WhatsApp rápido, sin anuncios, sin permisos raros y pesando menos de 4 MB.
 
-[Descargar APK universal (v0.1.4)](https://github.com/Maquiiiiii/Tierruos/releases/download/v0.1.4/Tierruos-universal.apk) · [Todas las versiones y SHA-256](https://github.com/Maquiiiiii/Tierruos/releases)
+[Descargar APK universal (v0.1.5)](https://github.com/Maquiiiiii/Tierruos/releases/download/v0.1.5/Tierruos-universal.apk) · [Todas las versiones y SHA-256](https://github.com/Maquiiiiii/Tierruos/releases)
 
-- **Versión actual:** `0.1.4` (`versionCode = 5`)
-- **Tamaño del APK firmado:** `1.271.731 bytes` (~1,27 MB)
+- **Versión actual:** `0.1.5` (`versionCode = 6`)
+- **Tamaño del APK firmado:** `1.288.844 bytes` (~1,29 MB)
 - **Requisitos:** Android 7.0 (API 24) o superior
 
 ## Qué hace
