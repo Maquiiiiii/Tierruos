@@ -86,10 +86,11 @@ internal class PresentationChecks(private val instrumentation: Instrumentation) 
         Check("presentationFirstStickerAndRealTrayPublishTogether") { withPack(1) { id ->
             val draft = requireNotNull(repository.getDraft(id))
             check(draft.stickers.size == 1 && draft.imageDataVersion == 1L)
+            check(draft.trayImageFile == "tray.webp" && draft.stickers.first().emojis == listOf("☕"))
             verify(repository.readTrayImage(id), 96, 48_000)
             verify(repository.readSticker(id, "s0.webp"), 512, 98_000)
             val files = File(app.filesDir, "stickers/$id").listFiles()!!
-            check(files.size == 2 && files.all { it.extension == "webp" })
+            check(files.size == 2 && files.all { it.extension == "webp" } && files.any { it.name == "tray.webp" })
         } },
         Check("presentationMainShowsRealThumbnailsAndOneExportCta") { withPack(3) { id ->
             withMain { activity ->

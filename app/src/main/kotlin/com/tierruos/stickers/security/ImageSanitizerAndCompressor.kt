@@ -70,18 +70,41 @@ class ImageSanitizerAndCompressor(context: Context) {
      * @throws ImageCompressionException If the platform encoder fails validation.
      * @throws IOException If input or private storage cannot be read/written.
      */
-    suspend fun createSticker(uri: Uri): CompressedImage = process(uri, 512, STICKER_MAX_BYTES)
+    suspend fun createSticker(uri: Uri): CompressedImage =
+        process(uri, STICKER_EDGE, STICKER_MAX_BYTES, STICKER_PADDING_PX)
 
     /** Same security pipeline, with a 96 x 96 canvas and [TRAY_ICON_MAX_BYTES] budget. */
     suspend fun createTrayIcon(uri: Uri): CompressedImage =
-        process(uri, 96, TRAY_ICON_MAX_BYTES)
+        process(uri, TRAY_ICON_EDGE, TRAY_ICON_MAX_BYTES, 0)
 
     /** Only for software pixels already owned by StickerCanvasView, never external URI input. */
-    suspend fun compressStickerBitmap(bitmap: Bitmap): CompressedImage = encodeEditorBitmap(bitmap, 512, STICKER_MAX_BYTES)
+    suspend fun compressStickerBitmap(bitmap: Bitmap): CompressedImage =
+        encodeEditorBitmap(bitmap, STICKER_EDGE, STICKER_MAX_BYTES, STICKER_PADDING_PX)
 
-    suspend fun compressTrayBitmap(bitmap: Bitmap): CompressedImage = encodeEditorBitmap(bitmap, 96, TRAY_ICON_MAX_BYTES)
+    suspend fun compressTrayBitmap(bitmap: Bitmap): CompressedImage =
+        encodeEditorBitmap(bitmap, TRAY_ICON_EDGE, TRAY_ICON_MAX_BYTES, 0)
 
-    private suspend fun encodeEditorBitmap(source: Bitmap, edge: Int, limit: Int): CompressedImage = withContext(Dispatchers.IO) {
+    /** Builds the 96 x 96 tray icon (< 48 KB) directly from a sanitized sticker WebP. */
+    suspend fun createTrayFromSticker(stickerBytes: ByteArray): CompressedImage = withContext(Dispatchers.IO) {
+        val options = BitmapFactory.Options().apply {
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+            inScaled = false
+        }
+        val decoded = BitmapFactory.decodeByteArray(stickerBytes, 0, stickerBytes.size, options)
+            ?: throw InvalidImageFormatException("No se pudo decodificar el sticker para generar el icono del pack.")
+        try {
+            encodeEditorBitmap(decoded, TRAY_ICON_EDGE, TRAY_ICON_MAX_BYTES, 0)
+        } finally {
+            decoded.recycle()
+        }
+    }
+
+    private suspend fun encodeEditorBitmap(
+        source: Bitmap,
+        edge: Int,
+        limit: Int,
+        paddingPx: Int = 0,
+    ): CompressedImage = withContext(Dispatchers.IO) {
         PROCESS_MUTEX.withLock {
             require(!source.isRecycled && source.width in 1..1024 && source.height in 1..1024)
             if (Build.VERSION.SDK_INT >= 26) require(source.config != Bitmap.Config.HARDWARE)
@@ -90,12 +113,26 @@ class ImageSanitizerAndCompressor(context: Context) {
             try {
                 val clean = Bitmap.createBitmap(edge, edge, Bitmap.Config.ARGB_8888)
                 try {
+                    clean.density = Bitmap.DENSITY_NONE
+                    clean.setHasAlpha(true)
                     clean.eraseColor(Color.TRANSPARENT)
-                    val scale = min(edge.toFloat() / source.width, edge.toFloat() / source.height)
-                    val left = (edge - source.width * scale) / 2f
-                    val top = (edge - source.height * scale) / 2f
-                    Canvas(clean).drawBitmap(source, null, RectF(left, top, edge - left, edge - top),
-                        Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+                    val available = (edge - 2 * paddingPx).coerceAtLeast(1).toFloat()
+                    val scale = min(available / source.width, available / source.height)
+                    val width = source.width * scale
+                    val height = source.height * scale
+                    val left = (edge - width) / 2f
+                    val top = (edge - height) / 2f
+                    val canvas = Canvas(clean)
+                    try {
+                        canvas.drawBitmap(
+                            source,
+                            null,
+                            RectF(left, top, left + width, top + height),
+                            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG),
+                        )
+                    } finally {
+                        canvas.setBitmap(null)
+                    }
                     compress(clean, limit, job)
                 } finally { clean.recycle() }
             } catch (error: OutOfMemoryError) {
@@ -104,7 +141,7 @@ class ImageSanitizerAndCompressor(context: Context) {
         }
     }
 
-    private suspend fun process(uri: Uri, edge: Int, byteLimit: Int): CompressedImage =
+    private suspend fun process(uri: Uri, edge: Int, byteLimit: Int, paddingPx: Int = 0): CompressedImage =
         withContext(Dispatchers.IO) {
             // Shared by all instances: callers cannot multiply bitmap allocations.
             PROCESS_MUTEX.withLock {
@@ -118,7 +155,7 @@ class ImageSanitizerAndCompressor(context: Context) {
                         val format = readSignature(snapshot.file)
                         val bounds = readBounds(snapshot.file, format)
                         jobContext.ensureActive()
-                        val bitmap = decodeOntoCleanCanvas(snapshot.file, bounds, edge, jobContext)
+                        val bitmap = decodeOntoCleanCanvas(snapshot.file, bounds, edge, paddingPx, jobContext)
                         try {
                             compress(bitmap, byteLimit, jobContext)
                         } finally {
@@ -270,6 +307,7 @@ class ImageSanitizerAndCompressor(context: Context) {
         file: File,
         bounds: ImageBounds,
         edge: Int,
+        paddingPx: Int,
         jobContext: CoroutineContext,
     ): Bitmap {
         val sampledWidth = (bounds.width.toLong() + bounds.sampleSize - 1) / bounds.sampleSize
@@ -313,7 +351,8 @@ class ImageSanitizerAndCompressor(context: Context) {
             target.density = Bitmap.DENSITY_NONE
             target.setHasAlpha(true)
             target.eraseColor(Color.TRANSPARENT)
-            val scale = min(edge.toFloat() / decoded.width, edge.toFloat() / decoded.height)
+            val available = (edge - 2 * paddingPx).coerceAtLeast(1).toFloat()
+            val scale = min(available / decoded.width, available / decoded.height)
             val width = decoded.width * scale
             val height = decoded.height * scale
             val left = (edge - width) / 2f
@@ -473,6 +512,9 @@ class ImageSanitizerAndCompressor(context: Context) {
 
     companion object {
         const val MAX_INPUT_BYTES: Long = 15_000_000L
+        const val STICKER_EDGE: Int = 512
+        const val TRAY_ICON_EDGE: Int = 96
+        const val STICKER_PADDING_PX: Int = 16
         const val STICKER_MAX_BYTES: Int = 98_000
         const val TRAY_ICON_MAX_BYTES: Int = 48_000
         private const val STREAM_BUFFER_BYTES = 16 * 1024

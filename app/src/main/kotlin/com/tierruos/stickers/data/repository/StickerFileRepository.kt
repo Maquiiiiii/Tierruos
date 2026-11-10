@@ -45,7 +45,7 @@ class StickerFileRepository(context: Context, private val database: TierruosData
     ): StickerPackDraft = access { job ->
         StickerStorageNames.requireIdentifier(identifier)
         if (database.getDraft(identifier) != null) throw SQLiteConstraintException("El identificador del pack ya existe.")
-        val fileName = newName("tray")
+        val fileName = TRAY_FILE_NAME
         val draft = StickerPackDraft(identifier, name, publisher, fileName, avoidCache = avoidCache)
         val bytes = WebpAssetValidation.snapshot(trayBytes, 96, TRAY_LIMIT)
         val file = writeFresh(identifier, fileName, bytes)
@@ -54,20 +54,33 @@ class StickerFileRepository(context: Context, private val database: TierruosData
 
     /** Publishes a new draft with its first real sticker and matching tray in one SQL commit. */
     suspend fun createPackWithSticker(
-        identifier: String, name: String, publisher: String,
-        stickerBytes: ByteArray, trayBytes: ByteArray, imageFileName: String,
-    ): StickerPackDraft = access { job ->
-        StickerStorageNames.requireIdentifier(identifier)
-        if (database.getDraft(identifier) != null) throw SQLiteConstraintException("El pack ya existe.")
-        val image = WebpAssetValidation.snapshot(stickerBytes, 512, STICKER_LIMIT)
-        val tray = WebpAssetValidation.snapshot(trayBytes, 96, TRAY_LIMIT)
-        val trayName = newName("tray")
-        val sticker = Sticker(imageFileName, image.size / 1_000.0)
-        val draft = StickerPackDraft(identifier, name, publisher, trayName, listOf(sticker))
-        val trayFile = writeFresh(identifier, trayName, tray)
-        publish(trayFile, job) {
-            val imageFile = writeFresh(identifier, imageFileName, image)
-            publish(imageFile, job) { database.createDraft(draft) }
+        identifier: String,
+        name: String,
+        publisher: String,
+        stickerBytes: ByteArray,
+        trayBytes: ByteArray? = null,
+        imageFileName: String,
+        emojis: List<String> = Sticker.DEFAULT_EMOJIS,
+    ): StickerPackDraft {
+        val resolvedTrayBytes = trayBytes
+            ?: ImageSanitizerAndCompressor(appContext).createTrayFromSticker(stickerBytes).bytes
+        return access { job ->
+            StickerStorageNames.requireIdentifier(identifier)
+            if (database.getDraft(identifier) != null) throw SQLiteConstraintException("El pack ya existe.")
+            val image = WebpAssetValidation.snapshot(stickerBytes, 512, STICKER_LIMIT)
+            val tray = WebpAssetValidation.snapshot(resolvedTrayBytes, 96, TRAY_LIMIT)
+            val trayName = TRAY_FILE_NAME
+            val sticker = Sticker(
+                imageFileName,
+                image.size / 1_000.0,
+                emojis.ifEmpty { Sticker.DEFAULT_EMOJIS },
+            ).snapshot()
+            val draft = StickerPackDraft(identifier, name, publisher, trayName, listOf(sticker))
+            val trayFile = writeFresh(identifier, trayName, tray)
+            publish(trayFile, job) {
+                val imageFile = writeFresh(identifier, imageFileName, image)
+                publish(imageFile, job) { database.createDraft(draft) }
+            }
         }
     }
 
@@ -130,7 +143,7 @@ class StickerFileRepository(context: Context, private val database: TierruosData
     suspend fun addSticker(
         identifier: String,
         bytes: ByteArray,
-        emojis: List<String> = emptyList(),
+        emojis: List<String> = Sticker.DEFAULT_EMOJIS,
         imageFileName: String = newName("sticker"),
         expectedVersion: Long? = null,
     ): Sticker = access { job ->
@@ -139,7 +152,11 @@ class StickerFileRepository(context: Context, private val database: TierruosData
         StickerStorageNames.requireImageFileName(imageFileName)
         require(imageFileName != current.trayImageFile)
         val data = WebpAssetValidation.snapshot(bytes, 512, STICKER_LIMIT)
-        val sticker = Sticker(imageFileName, data.size / 1_000.0, emojis.toList()).snapshot()
+        val sticker = Sticker(
+            imageFileName,
+            data.size / 1_000.0,
+            emojis.ifEmpty { Sticker.DEFAULT_EMOJIS }.toList(),
+        ).snapshot()
         val file = writeFresh(identifier, imageFileName, data)
         publish(file, job) { database.createSticker(identifier, sticker, expectedVersion) }
     }
@@ -148,7 +165,7 @@ class StickerFileRepository(context: Context, private val database: TierruosData
         identifier: String,
         previousFileName: String,
         bytes: ByteArray,
-        emojis: List<String> = emptyList(),
+        emojis: List<String> = Sticker.DEFAULT_EMOJIS,
         imageFileName: String = newName("sticker"),
         expectedVersion: Long? = null,
     ): Sticker = access { job ->
@@ -157,7 +174,11 @@ class StickerFileRepository(context: Context, private val database: TierruosData
         StickerStorageNames.requireImageFileName(imageFileName)
         require(imageFileName != previousFileName) { "La edición debe usar un nombre de archivo nuevo." }
         val data = WebpAssetValidation.snapshot(bytes, 512, STICKER_LIMIT)
-        val sticker = Sticker(imageFileName, data.size / 1_000.0, emojis.toList()).snapshot()
+        val sticker = Sticker(
+            imageFileName,
+            data.size / 1_000.0,
+            emojis.ifEmpty { Sticker.DEFAULT_EMOJIS }.toList(),
+        ).snapshot()
         val file = writeFresh(identifier, imageFileName, data)
         val result = publish(file, job) {
             database.updateSticker(identifier, previousFileName, sticker, expectedVersion)
@@ -174,7 +195,12 @@ class StickerFileRepository(context: Context, private val database: TierruosData
     ): Sticker = access {
         val current = database.getSticker(identifier, imageFileName)
             ?: throw NoSuchElementException("El sticker no existe.")
-        database.updateSticker(identifier, imageFileName, current.copy(emojis = emojis.toList()), expectedVersion)
+        database.updateSticker(
+            identifier,
+            imageFileName,
+            current.copy(emojis = emojis.ifEmpty { Sticker.DEFAULT_EMOJIS }.toList()),
+            expectedVersion,
+        )
     }
 
     suspend fun readSticker(identifier: String, imageFileName: String): ByteArray = access {
@@ -426,6 +452,7 @@ class StickerFileRepository(context: Context, private val database: TierruosData
     }
 
     companion object {
+        const val TRAY_FILE_NAME: String = "tray.webp"
         private const val STICKER_LIMIT = ImageSanitizerAndCompressor.STICKER_MAX_BYTES
         private const val TRAY_LIMIT = ImageSanitizerAndCompressor.TRAY_ICON_MAX_BYTES
         private val ROOT_DATABASES = mutableMapOf<String, String>()

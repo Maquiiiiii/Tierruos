@@ -10,7 +10,9 @@ import android.system.OsConstants
 import com.tierruos.stickers.data.StickerStorageCoordinator
 import com.tierruos.stickers.data.StickerStorageNames
 import com.tierruos.stickers.data.db.TierruosDatabaseHelper
+import com.tierruos.stickers.data.model.Sticker
 import com.tierruos.stickers.data.model.StickerPackDraft
+import com.tierruos.stickers.data.repository.StickerFileRepository
 import com.tierruos.stickers.data.repository.WebpAssetValidation
 import java.io.DataInputStream
 import java.io.File
@@ -49,7 +51,8 @@ internal class StickerProviderStore(context: Context, private val database: Tier
         MatrixCursor(columns).apply {
             val pack = database.getDraft(identifier)
             if (pack?.isExportable == true) pack.stickers.forEach { sticker ->
-                val values = arrayOf(sticker.imageFileName, sticker.emojis.joinToString(","), "")
+                val emojis = sticker.emojis.ifEmpty { Sticker.DEFAULT_EMOJIS }.joinToString(",")
+                val values = arrayOf(sticker.imageFileName, emojis, "")
                 addRow(columns.map { values[StickerProviderContract.stickerColumns.indexOf(it)] })
             }
         }
@@ -71,14 +74,15 @@ internal class StickerProviderStore(context: Context, private val database: Tier
         StickerStorageNames.requireImageFileName(fileName)
         val pack = database.getDraft(identifier)?.takeIf { it.isExportable }
             ?: throw FileNotFoundException("No existe un pack exportable.")
-        val tray = fileName == pack.trayImageFile
+        val tray = fileName == pack.trayImageFile || fileName == StickerFileRepository.TRAY_FILE_NAME
         val sticker = pack.stickers.firstOrNull { it.imageFileName == fileName }
         if (!tray && sticker == null) throw FileNotFoundException("La imagen no está registrada en el pack.")
+        val resolvedFileName = if (tray) pack.trayImageFile else fileName
 
         val privateRoot = app.filesDir.canonicalFile
         val root = safeChild(privateRoot, "stickers")
         val directory = safeChild(root, identifier)
-        val file = safeChild(directory, fileName)
+        val file = safeChild(directory, resolvedFileName)
         if (!file.canonicalPath.startsWith(root.canonicalPath + File.separator)) {
             throw SecurityException("La imagen debe pertenecer al directorio privado de stickers.")
         }

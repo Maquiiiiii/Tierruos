@@ -49,6 +49,8 @@ class SanitizerInstrumentation : Instrumentation() {
                     try {
                         check(Color.alpha(bitmap.getPixel(256, 0)) == 0)
                         check(Color.alpha(bitmap.getPixel(256, 511)) == 0)
+                        check(Color.alpha(bitmap.getPixel(8, 256)) == 0)
+                        check(Color.alpha(bitmap.getPixel(503, 256)) == 0)
                         check(Color.red(bitmap.getPixel(256, 256)) > 180)
                     } finally { bitmap.recycle() }
                 }

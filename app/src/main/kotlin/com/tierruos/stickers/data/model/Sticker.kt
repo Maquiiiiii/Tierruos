@@ -7,7 +7,7 @@ import kotlin.math.roundToInt
 data class Sticker(
     val imageFileName: String,
     val sizeInKb: Double,
-    val emojis: List<String> = emptyList(),
+    val emojis: List<String> = DEFAULT_EMOJIS,
 ) {
     init {
         StickerStorageNames.requireImageFileName(imageFileName)
@@ -21,5 +21,12 @@ data class Sticker(
     /** Decimal KB, consistently with the image engine. SQLite persists this exact byte count. */
     val sizeInBytes: Int get() = (sizeInKb * 1_000.0).roundToInt()
 
-    internal fun snapshot(): Sticker = copy(emojis = java.util.Collections.unmodifiableList(emojis.toList()))
+    internal fun snapshot(): Sticker = copy(
+        emojis = java.util.Collections.unmodifiableList(emojis.ifEmpty { DEFAULT_EMOJIS }.toList()),
+    )
+
+    companion object {
+        const val DEFAULT_EMOJI: String = "☕"
+        val DEFAULT_EMOJIS: List<String> = listOf(DEFAULT_EMOJI)
+    }
 }

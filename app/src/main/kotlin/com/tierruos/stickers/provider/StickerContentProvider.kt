@@ -91,7 +91,10 @@ class StickerContentProvider : ContentProvider() {
         throw UnsupportedOperationException("El proveedor de stickers es de solo lectura.")
     }
 
-    private fun authorize() = StickerProviderContract.requireAllowedCaller(callingPackage)
+    private fun authorize() {
+        val ownPackage = context?.applicationContext?.packageName ?: "com.tierruos.stickers"
+        StickerProviderContract.requireAllowedCaller(callingPackage, ownPackage)
+    }
 
     private fun route(uri: Uri): Int {
         require(uri.scheme == "content" && uri.authority == authority && uri.query == null && uri.fragment == null) {

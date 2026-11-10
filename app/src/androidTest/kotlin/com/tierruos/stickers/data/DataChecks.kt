@@ -34,6 +34,8 @@ internal class DataChecks(private val instrumentation: Instrumentation) {
     fun cases(): List<Check> = listOf(
         Check("dataModelsEnforceExportCountsAndEmojiLimit") {
             val sticker = Sticker("one.webp", 0.1, listOf("😀"))
+            check(Sticker("default_emoji.webp", 0.1).emojis == listOf("☕"))
+            check(Sticker("empty_emoji.webp", 0.1, emptyList()).snapshot().emojis == listOf("☕"))
             val draft = StickerPackDraft("A1", "Pack", "Tierruos", "tray.webp")
             expect<PackNotReadyException> { draft.toStickerPack() }
             expect<IllegalArgumentException> { StickerPack("A1", "Pack", "Tierruos", "tray.webp", listOf(sticker)) }

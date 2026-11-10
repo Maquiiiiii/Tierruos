@@ -44,17 +44,17 @@ internal class IpcExportChecks(private val instrumentation: Instrumentation) {
     private var trayBytes: ByteArray? = null
 
     fun cases(): List<Check> = listOf(
-        Check("ipcAllowlistRejectsAnonymousAndUntrustedPackages") {
-            listOf("com.whatsapp", "com.whatsapp.w4b", "com.tierruos.stickers").forEach {
+        Check("ipcAllowlistRejectsUntrustedPackagesAndAllowsNullCaller") {
+            listOf(null, "com.whatsapp", "com.whatsapp.w4b", "com.tierruos.stickers").forEach {
                 StickerProviderContract.requireAllowedCaller(it)
             }
-            listOf(null, "", "com.whatsapp.fake", "com.tierruos.stickers.test", "android").forEach {
+            listOf("", "com.whatsapp.fake", "com.tierruos.stickers.test", "android").forEach {
                 expect<SecurityException> { StickerProviderContract.requireAllowedCaller(it) }
             }
             val provider = StickerContentProvider().apply {
                 attachInfo(app, ProviderInfo().apply { authority = StickerProviderContract.authority(app) })
             }
-            expect<SecurityException> { provider.query(Uri.parse("content://bad/metadata"), null, null, null, null) }
+            expect<IllegalArgumentException> { provider.query(Uri.parse("content://bad/metadata"), null, null, null, null) }
         },
         Check("ipcMetadataUsesExactWhatsAppColumnsAndCacheFlag") { withPack { id ->
             val pack = requireNotNull(storage.database.getPack(id))

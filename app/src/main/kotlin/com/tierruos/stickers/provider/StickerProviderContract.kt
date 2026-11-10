@@ -26,8 +26,15 @@ object StickerProviderContract {
     fun assetUri(context: Context, identifier: String, fileName: String): Uri = metadataUri(context).buildUpon()
         .path(null).appendPath("stickers_asset").appendPath(identifier).appendPath(fileName).build()
 
-    internal fun requireAllowedCaller(packageName: String?) {
-        if (packageName != WHATSAPP && packageName != WHATSAPP_BUSINESS && packageName != "com.tierruos.stickers") {
+    internal fun requireAllowedCaller(
+        packageName: String?,
+        ownPackage: String = "com.tierruos.stickers",
+    ) {
+        if (packageName != null &&
+            packageName != WHATSAPP &&
+            packageName != WHATSAPP_BUSINESS &&
+            packageName != ownPackage
+        ) {
             throw SecurityException("Este proveedor solo admite Tierruos y WhatsApp.")
         }
     }

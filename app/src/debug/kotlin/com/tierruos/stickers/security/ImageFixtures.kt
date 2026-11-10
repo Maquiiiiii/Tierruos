@@ -26,12 +26,13 @@ internal object ImageFixtures {
     }
 
     fun noiseImage(randomAlpha: Boolean): ByteArray {
+        val edge = ImageSanitizerAndCompressor.STICKER_EDGE - 2 * ImageSanitizerAndCompressor.STICKER_PADDING_PX
         val random = Random(20261109L)
-        val pixels = IntArray(512 * 512) {
+        val pixels = IntArray(edge * edge) {
             val color = random.nextInt()
             if (randomAlpha) color else color or Color.BLACK
         }
-        val bitmap = Bitmap.createBitmap(pixels, 512, 512, Bitmap.Config.ARGB_8888)
+        val bitmap = Bitmap.createBitmap(pixels, edge, edge, Bitmap.Config.ARGB_8888)
         return try {
             ByteArrayOutputStream().use { stream ->
                 check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream))

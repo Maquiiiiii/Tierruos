@@ -316,17 +316,40 @@ class StickerEditorActivity : TierruosActivity() {
                 val image = engine.compressStickerBitmap(bitmap)
                 val id = packId
                 if (id == null) {
-                    val tray = engine.compressTrayBitmap(bitmap)
+                    val tray = engine.createTrayFromSticker(image.bytes)
                     val previous = repository.getDraft(newPackId)
-                    if (previous == null) repository.createPackWithSticker(newPackId, name.trim().ifBlank { INVISIBLE_CHAR }, publisher.trim().ifBlank { INVISIBLE_CHAR }, image.bytes, tray.bytes, pendingFileName)
-                    else check(previous.stickers.any { it.imageFileName == pendingFileName })
+                    if (previous == null) {
+                        repository.createPackWithSticker(
+                            newPackId,
+                            name.trim().ifBlank { INVISIBLE_CHAR },
+                            publisher.trim().ifBlank { INVISIBLE_CHAR },
+                            image.bytes,
+                            tray.bytes,
+                            pendingFileName,
+                            com.tierruos.stickers.data.model.Sticker.DEFAULT_EMOJIS,
+                        )
+                    } else check(previous.stickers.any { it.imageFileName == pendingFileName })
                 } else {
                     val current = repository.getDraft(id) ?: throw NoSuchElementException()
                     val old = oldFileName
-                    if (old == null) repository.addSticker(id, image.bytes, imageFileName = pendingFileName, expectedVersion = expectedVersion)
-                    else {
+                    if (old == null) {
+                        repository.addSticker(
+                            id,
+                            image.bytes,
+                            emojis = com.tierruos.stickers.data.model.Sticker.DEFAULT_EMOJIS,
+                            imageFileName = pendingFileName,
+                            expectedVersion = expectedVersion,
+                        )
+                    } else {
                         val sticker = current.stickers.firstOrNull { it.imageFileName == old } ?: throw NoSuchElementException()
-                        repository.replaceSticker(id, old, image.bytes, sticker.emojis, pendingFileName, expectedVersion)
+                        repository.replaceSticker(
+                            id,
+                            old,
+                            image.bytes,
+                            sticker.emojis.ifEmpty { com.tierruos.stickers.data.model.Sticker.DEFAULT_EMOJIS },
+                            pendingFileName,
+                            expectedVersion,
+                        )
                     }
                 }
                 showWeight(image.sizeBytes)

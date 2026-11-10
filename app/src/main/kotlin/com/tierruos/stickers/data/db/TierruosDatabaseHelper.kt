@@ -289,10 +289,11 @@ class TierruosDatabaseHelper(
     }
 
     private fun stickerValues(value: Sticker) = ContentValues().apply {
+        val emojis = value.emojis.ifEmpty { Sticker.DEFAULT_EMOJIS }
         put("image_file_name", value.imageFileName)
         put("size_bytes", value.sizeInBytes)
         for (i in 0..2) {
-            val emoji = value.emojis.getOrNull(i)
+            val emoji = emojis.getOrNull(i)
             if (emoji == null) putNull("emoji_${i + 1}") else put("emoji_${i + 1}", emoji)
         }
     }
@@ -331,8 +332,12 @@ class TierruosDatabaseHelper(
             })
         }
 
-    private fun Cursor.sticker(): Sticker = Sticker(getString(0), getLong(1) / 1_000.0,
-        buildList { for (column in 2..4) if (!isNull(column)) add(getString(column)) }).snapshot()
+    private fun Cursor.sticker(): Sticker {
+        val emojis = buildList {
+            for (column in 2..4) if (!isNull(column)) add(getString(column))
+        }.ifEmpty { Sticker.DEFAULT_EMOJIS }
+        return Sticker(getString(0), getLong(1) / 1_000.0, emojis).snapshot()
+    }
 
     private inline fun <T> read(block: (SQLiteDatabase) -> T): T =
         StickerStorageCoordinator.lock.withLock { block(readableDatabase) }
