@@ -10,10 +10,7 @@
             <TextView android:id="@+id/fileWeight" android:layout_width="0dp" android:layout_weight="1"
                 android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.Tierruos.Caption"
                 android:text="@string/metric_empty" android:accessibilityLiveRegion="polite" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/pasteImage"
-                style="@style/Widget.Tierruos.Button.Secondary" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="@string/paste_image" android:visibility="gone" />
-        </LinearLayout>
+</LinearLayout>
         <com.tierruos.stickers.ui.SquareCanvasHost android:id="@+id/workspace" android:layout_width="match_parent"
             android:layout_height="0dp" android:layout_weight="1" android:padding="@dimen/space_16">
             <com.google.android.material.card.MaterialCardView android:id="@+id/canvasCard"
@@ -55,11 +52,7 @@
                     android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
                     android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_undo"
                     app:tint="@color/tool_tint" android:contentDescription="@string/undo_tool" />
-                <ImageButton android:id="@+id/pasteTool" style="@style/Widget.Tierruos.Tool"
-                    android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_paste"
-                    app:tint="@color/tool_tint" android:contentDescription="@string/paste_image" />
-                <ImageButton android:id="@+id/chooseTool" style="@style/Widget.Tierruos.Tool"
+<ImageButton android:id="@+id/chooseTool" style="@style/Widget.Tierruos.Tool"
                     android:layout_width="@dimen/touch_target_min" android:layout_height="@dimen/touch_target_min"
                     android:layout_marginEnd="@dimen/space_8" android:src="@drawable/ic_create"
                     app:tint="@color/tool_tint" android:contentDescription="@string/choose_image" />
@@ -68,8 +61,13 @@
         <com.google.android.material.button.MaterialButton android:id="@+id/saveButton"
             style="@style/Widget.Tierruos.Button.Primary" android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_16" android:layout_marginEnd="@dimen/space_16"
-            android:layout_marginTop="@dimen/space_8" android:layout_marginBottom="@dimen/space_8"
+            android:layout_marginTop="@dimen/space_8" android:layout_marginBottom="@dimen/elevation_none"
             android:text="@string/save_sticker" app:icon="@drawable/ic_create" app:iconGravity="textStart" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/pasteImage"
+            style="@style/Widget.Tierruos.Button.Secondary" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/space_8" android:layout_marginBottom="@dimen/space_8"
+            android:text="@string/paste_image" app:icon="@drawable/ic_paste" app:iconGravity="textStart" />
     </LinearLayout>
     <include android:id="@+id/loading" layout="@layout/view_busy_overlay" />
 </FrameLayout>

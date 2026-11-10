@@ -51,7 +51,6 @@
     <string name="retry_action">Reintentar</string>
     <string name="name_pack_hint">Nombre del pack</string>
     <string name="publisher_hint">Quién lo publica</string>
-    <string name="required_field">Completa este campo</string>
     <string name="text_layer_title">Añade texto al sticker</string>
     <string name="text_layer_hint">Escribe tu texto</string>
     <string name="apply_action">Aplicar</string>

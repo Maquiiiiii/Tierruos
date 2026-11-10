@@ -9,7 +9,7 @@
     <dimen name="space_32">32dp</dimen>
     <dimen name="thumbnail_size">88dp</dimen>
     <dimen name="library_content_top">64dp</dimen>
-    <dimen name="library_content_bottom">80dp</dimen>
+    <dimen name="library_content_bottom">144dp</dimen>
     <dimen name="card_outer_radius">20dp</dimen>
     <dimen name="card_padding">8dp</dimen>
     <dimen name="card_inner_radius">12dp</dimen>

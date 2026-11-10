@@ -1,7 +1,11 @@
 # Tierruos — Módulos 1–6
 
-[Descargar APK universal para Android](https://github.com/Maquiiiiii/Tierruos/releases/latest/download/Tierruos-universal.apk)
+<img src="docs/assets/tierruos-logo.png" width="128" alt="Logo de Tierruos" />
+
+[Descargar APK universal para Android](https://github.com/Maquiiiiii/Tierruos/releases/download/v0.1.1/Tierruos-universal.apk)
 · [Versiones y comprobación SHA-256](https://github.com/Maquiiiiii/Tierruos/releases)
+
+Versión **0.1.1**, APK firmado de **1.267.635 bytes** (1,27 MB). Se verificaron 101 pruebas sin fallos en Android 35. [Cambios y validación](docs/ACTUALIZACION_0.1.1.md).
 
 Requiere Android 7.0 o posterior. La descarga corresponde a la versión release
 firmada; la clave privada de firma no se incluye en este repositorio.
@@ -41,7 +45,7 @@ El Módulo 6 conecta biblioteca, miniaturas reales, editor, portapapeles y Photo
 Picker mediante ViewBinding. Incluye creación de packs, edición, borrado y
 confirmación de resultados de exportación. Uso, seguridad, límites geométricos
 del lienzo cuadrado y pruebas están en [docs/MODULO_6.md](docs/MODULO_6.md).
-Verificación actual: **99 pruebas sin fallos** en Android 35 de teléfono, teléfono
+Verificación original del Módulo 6: **99 pruebas sin fallos** en Android 35 de teléfono, teléfono
 con fuente al 130 % y tablet. Debug/release y lint correctos, sin errores de lint
 (25/24 advertencias visibles). Cada APK release sin firma pesa **1.138.440 bytes**.
 

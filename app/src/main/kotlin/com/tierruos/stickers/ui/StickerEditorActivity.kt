@@ -128,7 +128,6 @@ class StickerEditorActivity : TierruosActivity() {
         val canvas = binding.stickerCanvas
         binding.backButton.setOnClickListener { leaveEditor() }
         binding.pasteImage.setOnClickListener { pasteImage() }
-        binding.pasteTool.setOnClickListener { pasteImage() }
         binding.chooseTool.setOnClickListener {
             if (!blocked()) {
                 picking = true; renderControls()
@@ -283,21 +282,26 @@ class StickerEditorActivity : TierruosActivity() {
 
     private fun enterPackDetails() {
         val content = DialogPackDetailsBinding.inflate(layoutInflater)
-        content.publisher.setText(getString(R.string.app_name))
-        val modal = MaterialAlertDialogBuilder(this).setTitle(R.string.new_pack).setView(content.root)
+
+        val modal = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_Tierruos_CreatePack).setTitle(R.string.new_pack).setView(content.root)
             .setNegativeButton(R.string.cancel_action, null).setPositiveButton(R.string.save_sticker, null).create()
+        modal.window?.setWindowAnimations(0)
         dialog = modal
         modal.setOnDismissListener { dialog = null }
         modal.setOnShowListener {
             modal.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val name = content.packName.text.toString().trim()
-                val publisher = content.publisher.text.toString().trim()
-                if (name.isBlank()) content.packName.error = getString(R.string.required_field)
-                if (publisher.isBlank()) content.publisher.error = getString(R.string.required_field)
-                if (name.isNotBlank() && publisher.isNotBlank() && !blocked()) { modal.dismiss(); saveSticker(name, publisher) }
+                val name = content.packName.text.toString().trim().ifBlank { INVISIBLE_CHAR }
+                val publisher = content.publisher.text.toString().trim().ifBlank { INVISIBLE_CHAR }
+                if (!blocked()) { modal.dismiss(); saveSticker(name, publisher) }
             }
         }
         modal.show()
+        val surface = com.google.android.material.shape.MaterialShapeDrawable().apply {
+            shapeAppearanceModel = com.google.android.material.shape.ShapeAppearanceModel.builder()
+                .setAllCornerSizes(resources.getDimension(R.dimen.card_outer_radius)).build()
+            fillColor = android.content.res.ColorStateList.valueOf(getColor(R.color.surface))
+        }
+        modal.window?.setBackgroundDrawable(android.graphics.drawable.InsetDrawable(surface, resources.getDimensionPixelSize(R.dimen.space_32)))
     }
 
     internal fun saveSticker(name: String = "", publisher: String = "") {
@@ -314,7 +318,7 @@ class StickerEditorActivity : TierruosActivity() {
                 if (id == null) {
                     val tray = engine.compressTrayBitmap(bitmap)
                     val previous = repository.getDraft(newPackId)
-                    if (previous == null) repository.createPackWithSticker(newPackId, name, publisher, image.bytes, tray.bytes, pendingFileName)
+                    if (previous == null) repository.createPackWithSticker(newPackId, name.trim().ifBlank { INVISIBLE_CHAR }, publisher.trim().ifBlank { INVISIBLE_CHAR }, image.bytes, tray.bytes, pendingFileName)
                     else check(previous.stickers.any { it.imageFileName == pendingFileName })
                 } else {
                     val current = repository.getDraft(id) ?: throw NoSuchElementException()
@@ -354,7 +358,6 @@ class StickerEditorActivity : TierruosActivity() {
         binding.saveButton.isEnabled = image && !blocked
         binding.backButton.isEnabled = !saving
         binding.pasteImage.isEnabled = !blocked && hasClipboardImage
-        binding.pasteTool.isEnabled = !blocked && hasClipboardImage
         binding.chooseTool.isEnabled = !blocked
         listOf(binding.transformTool, binding.lassoTool, binding.eraserTool, binding.outlineTool, binding.textTool).forEach { it.isEnabled = image && !blocked }
         binding.undoTool.isEnabled = !blocked && binding.stickerCanvas.canUndo
@@ -389,6 +392,7 @@ class StickerEditorActivity : TierruosActivity() {
     override fun onDestroy() { dialog?.dismiss(); dialog = null; super.onDestroy() }
 
     companion object {
+        const val INVISIBLE_CHAR = "\u2800"
         const val EXTRA_PACK_ID = "pack_id"
         const val EXTRA_IMAGE_URI = "image_uri"
         const val EXTRA_FILE_NAME = "image_file_name"

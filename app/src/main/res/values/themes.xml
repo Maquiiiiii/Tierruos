@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="ThemeOverlay.Tierruos.CreatePack" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="alertDialogStyle">@style/MaterialAlertDialog.Tierruos</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Tierruos.Card</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Tierruos.Button.Primary</item>
+    </style>
+    <style name="MaterialAlertDialog.Tierruos" parent="MaterialAlertDialog.MaterialComponents">
+        <item name="shapeAppearance">@style/ShapeAppearance.Tierruos.Card</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Tierruos.Card</item>
+        <item name="backgroundTint">@color/surface</item>
+    </style>
     <style name="Theme.Tierruos" parent="Theme.MaterialComponents.NoActionBar">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorPrimaryVariant">@color/accent</item>

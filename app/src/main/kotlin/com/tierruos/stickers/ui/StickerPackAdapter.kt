@@ -67,6 +67,12 @@ class StickerPackAdapter(
         val active = pack.identifier == selected
         binding.packName.text = pack.name
         binding.publisher.text = pack.publisher
+        binding.packName.visibility = if (pack.name == StickerEditorActivity.INVISIBLE_CHAR || pack.name.isBlank()) View.GONE else View.VISIBLE
+        binding.publisher.visibility = if (pack.publisher == StickerEditorActivity.INVISIBLE_CHAR || pack.publisher.isBlank()) View.GONE else View.VISIBLE
+        binding.stickerGrid.layoutParams = (binding.stickerGrid.layoutParams as android.widget.LinearLayout.LayoutParams).apply {
+            topMargin = if (binding.packName.visibility == View.GONE && binding.publisher.visibility == View.GONE) 0
+                else context.resources.getDimensionPixelSize(R.dimen.space_16)
+        }
         binding.packProgress.text = progressText(pack, context.resources)
         binding.packActions.visibility = if (active) View.VISIBLE else View.GONE
         binding.newSticker.isEnabled = pack.stickers.size < 30

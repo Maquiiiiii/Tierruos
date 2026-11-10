@@ -1,5 +1,9 @@
 # Distribución de Tierruos
 
+Versión actual: **0.1.1**, 1.267.635 bytes. [Descarga y validación](ACTUALIZACION_0.1.1.md).
+
+La información de 0.1.0 que sigue se conserva como registro histórico.
+
 La APK instalable se publica como asset de GitHub Releases, separada del historial
 de código fuente. El enlace estable del README apunta a `Tierruos-universal.apk`.
 Cada versión incluye `SHA256SUMS.txt` para comprobar la descarga.

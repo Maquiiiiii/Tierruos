@@ -34,6 +34,36 @@ internal class PresentationChecks(private val instrumentation: Instrumentation) 
     private var tray: ByteArray? = null
 
     fun cases(): List<Check> = listOf(
+        Check("createPackDialogSavesBothEmptyFieldsWithoutValidationError") {
+            val before = repository.listPacks(200).map { it.identifier }.toSet()
+            try {
+                withEditor { activity ->
+                    withContext(Dispatchers.Main) { activity.importUri(providerUri("spoofed")) }
+                    waitEditor(activity, image = true)
+                    withContext(Dispatchers.Main) { activity.binding.saveButton.performClick() }
+                    delay(2000)
+                    capture("create-pack-v011.png")
+                    val root = requireNotNull(instrumentation.uiAutomation.rootInActiveWindow)
+                    val button = root.findAccessibilityNodeInfosByText(app.getString(R.string.save_sticker)).first { it.isClickable }
+                    check(button.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK))
+                    awaitFinished(activity)
+                    val created = repository.listPacks(200).single { it.identifier !in before }
+                    check(created.name == "\u2800" && created.publisher == "\u2800")
+                }
+            } finally { repository.listPacks(200).filter { it.identifier !in before }.forEach { repository.deletePack(it.identifier) } }
+        },
+        Check("unnamedPackPersistsInvisibleMetadataAndHidesBothLabels") { withPack(1) { id ->
+            repository.updatePackMetadata(id, StickerEditorActivity.INVISIBLE_CHAR, StickerEditorActivity.INVISIBLE_CHAR, false)
+            val stored = repository.getDraft(id)!!
+            check(stored.name == "\u2800" && stored.publisher == "\u2800")
+            withMain { activity ->
+                waitMain(activity)
+                withContext(Dispatchers.Main) {
+                    val row = ItemStickerPackBinding.bind(activity.binding.packList.getChildAt(0))
+                    check(row.packName.visibility == View.GONE && row.publisher.visibility == View.GONE)
+                }
+            }
+        } },
         Check("presentationClipboardAcceptsLocalUriWithoutTrustingMime") {
             val uri = Uri.parse("content://untrusted.example/pixels")
             check(ClipboardImages.extract(ClipData("image", arrayOf("image/png"), ClipData.Item(uri))) == uri)
@@ -71,7 +101,7 @@ internal class PresentationChecks(private val instrumentation: Instrumentation) 
                     check(row.stickerGrid.childCount == 3)
                     val available = activity.binding.root.height - activity.binding.root.paddingTop - activity.binding.root.paddingBottom
                     check(activity.binding.packList.height == available)
-                    check((activity.binding.packList.height - activity.binding.packList.paddingTop - activity.binding.packList.paddingBottom).toFloat() / available > 0.75f)
+                    check(activity.binding.packList.paddingBottom == app.resources.getDimensionPixelSize(R.dimen.library_content_bottom))
                     check((activity.binding.packList.adapter.getItem(0) as com.tierruos.stickers.data.model.StickerPackDraft).identifier == id)
                 }
                 delay(350)
