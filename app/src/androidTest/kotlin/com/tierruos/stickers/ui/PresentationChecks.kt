@@ -98,7 +98,7 @@ internal class PresentationChecks(private val instrumentation: Instrumentation) 
                 withContext(Dispatchers.Main) {
                     val row = ItemStickerPackBinding.bind(activity.binding.packList.getChildAt(0))
                     check(row.packName.text == "Entre panas" && row.publisher.text == "Tierruos")
-                    check(row.packProgress.text.toString().contains("3/30") && activity.binding.exportButton.isEnabled)
+                    check(row.packProgress.text.toString().contains("3/30") && activity.binding.bottomNav.isEnabled)
                     check(row.stickerGrid.childCount == 3)
                     val available = activity.binding.root.height - activity.binding.root.paddingTop - activity.binding.root.paddingBottom
                     check(activity.binding.packList.height == available)
@@ -115,13 +115,15 @@ internal class PresentationChecks(private val instrumentation: Instrumentation) 
                 withContext(Dispatchers.Main) {
                     val row = ItemStickerPackBinding.bind(activity.binding.packList.getChildAt(0))
                     check(row.packProgress.text.toString().contains("Faltan 2") && row.packProgress.text.toString().contains("1/30"))
-                    check(!activity.binding.exportButton.isEnabled)
                 }
                 repository.addSticker(id, images()[1], imageFileName = "s1.webp")
                 repository.addSticker(id, images()[2], imageFileName = "s2.webp")
                 withContext(Dispatchers.Main) { activity.reload() }
                 waitMain(activity)
-                withContext(Dispatchers.Main) { check(activity.binding.exportButton.isEnabled) }
+                withContext(Dispatchers.Main) {
+                    val row = ItemStickerPackBinding.bind(activity.binding.packList.getChildAt(0))
+                    check(row.packProgress.text.toString().contains("3/30"))
+                }
             }
         } },
         Check("presentationMainClipboardButtonFollowsFocusedClip") { withMain { activity ->
@@ -355,12 +357,25 @@ internal class PresentationChecks(private val instrumentation: Instrumentation) 
                 check(!activity.isFinishing)
             }
         } },
-        Check("presentationExportFailureRestoresMainCtaWithoutFalseSuccess") { withPack(3) { _ ->
-            withMain { activity ->
-                waitMain(activity)
-                withContext(Dispatchers.Main) { activity.binding.exportButton.performClick() }
-                waitMain(activity)
-                withContext(Dispatchers.Main) { check(activity.binding.exportButton.isEnabled && !activity.isFinishing) }
+        Check("presentationExportFailureRestoresMainCtaWithoutFalseSuccess") { withPack(3) { id ->
+            val detail = instrumentation.startActivitySync(
+                Intent(app, StickerPackDetailActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .putExtra(StickerPackDetailActivity.EXTRA_PACK_ID, id),
+            ) as StickerPackDetailActivity
+            try {
+                withContext(Dispatchers.Main) {
+                    withTimeout(8_000) {
+                        while (!detail.hasWindowFocus() || detail.binding.detailRoot.width == 0 || detail.binding.loading.root.visibility == View.VISIBLE) delay(16)
+                    }
+                    detail.binding.exportPackButton.performClick()
+                    withTimeout(8_000) {
+                        while (detail.binding.loading.root.visibility == View.VISIBLE) delay(16)
+                    }
+                    check(detail.binding.exportPackButton.isEnabled && !detail.isFinishing)
+                }
+            } finally {
+                withContext(Dispatchers.Main) { detail.finish() }
             }
         } },
     )

@@ -36,6 +36,8 @@
         <item name="android:statusBarColor">@color/bg_canvas</item>
         <item name="android:navigationBarColor">@color/bg_canvas</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowContentTransitions">true</item>
         <item name="textAppearanceHeadline6">@style/TextAppearance.Tierruos.Title</item>
         <item name="textAppearanceHeadline1">@style/TextAppearance.Tierruos.Title</item>
         <item name="textAppearanceHeadline2">@style/TextAppearance.Tierruos.Title</item>

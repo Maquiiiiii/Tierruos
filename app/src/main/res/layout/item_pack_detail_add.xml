@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.tierruos.stickers.ui.SquareSlotFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/addCellRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:background="@drawable/bg_detail_add_slot"
+    android:clickable="true"
+    android:contentDescription="@string/detail_add_sticker"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+    <!-- Large centered '+' symbol in the background (#28FFFFFF) -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:fontFamily="sans-serif-light"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="+"
+        android:textColor="#28FFFFFF"
+        android:textSize="54sp" />
+
+    <!-- Embossed dark/monochrome sticker figure superimposed -->
+    <ImageView
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:layout_gravity="center"
+        android:alpha="0.88"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_sticker_embossed" />
+</com.tierruos.stickers.ui.SquareSlotFrameLayout>

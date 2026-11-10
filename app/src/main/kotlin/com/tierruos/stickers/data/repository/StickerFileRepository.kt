@@ -11,6 +11,7 @@ import com.tierruos.stickers.data.db.TierruosDatabaseHelper
 import com.tierruos.stickers.data.model.Sticker
 import com.tierruos.stickers.data.model.StickerPack
 import com.tierruos.stickers.data.model.StickerPackDraft
+import com.tierruos.stickers.provider.StickerProviderContract
 import com.tierruos.stickers.security.ImageSanitizerAndCompressor
 import java.io.DataInputStream
 import java.io.File
@@ -77,10 +78,12 @@ class StickerFileRepository(context: Context, private val database: TierruosData
             ).snapshot()
             val draft = StickerPackDraft(identifier, name, publisher, trayName, listOf(sticker))
             val trayFile = writeFresh(identifier, trayName, tray)
-            publish(trayFile, job) {
+            val created = publish(trayFile, job) {
                 val imageFile = writeFresh(identifier, imageFileName, image)
                 publish(imageFile, job) { database.createDraft(draft) }
             }
+            notifyProviderChange(identifier)
+            created
         }
     }
 
@@ -166,7 +169,12 @@ class StickerFileRepository(context: Context, private val database: TierruosData
             emojis.ifEmpty { Sticker.DEFAULT_EMOJIS }.toList(),
         ).snapshot()
         val file = writeFresh(identifier, imageFileName, data)
-        publish(file, job) { database.createSticker(identifier, sticker, expectedVersion) }
+        val created = publish(file, job) { database.createSticker(identifier, sticker, expectedVersion) }
+        if (current.stickers.isEmpty()) {
+            refreshTrayFromFirstSticker(identifier, current.trayImageFile, data)
+        }
+        notifyProviderChange(identifier)
+        created
     }
 
     suspend fun replaceSticker(
@@ -177,10 +185,11 @@ class StickerFileRepository(context: Context, private val database: TierruosData
         imageFileName: String = newName("sticker"),
         expectedVersion: Long? = null,
     ): Sticker = access { job ->
-        requireDraft(identifier)
+        val current = requireDraft(identifier)
         requireNotNull(database.getSticker(identifier, previousFileName)) { "El sticker no existe." }
         StickerStorageNames.requireImageFileName(imageFileName)
         require(imageFileName != previousFileName) { "La edición debe usar un nombre de archivo nuevo." }
+        val isFirstSticker = current.stickers.firstOrNull()?.imageFileName == previousFileName
         val data = WebpAssetValidation.snapshot(bytes, 512, STICKER_LIMIT)
         val sticker = Sticker(
             imageFileName,
@@ -192,6 +201,10 @@ class StickerFileRepository(context: Context, private val database: TierruosData
             database.updateSticker(identifier, previousFileName, sticker, expectedVersion)
         }
         drainDeletions()
+        if (isFirstSticker) {
+            refreshTrayFromFirstSticker(identifier, current.trayImageFile, data)
+        }
+        notifyProviderChange(identifier)
         result
     }
 
@@ -236,9 +249,24 @@ class StickerFileRepository(context: Context, private val database: TierruosData
         access {
             StickerStorageNames.requireIdentifier(identifier)
             StickerStorageNames.requireImageFileName(imageFileName)
-            val deleted = if (database.getDraft(identifier) == null) false
+            val before = database.getDraft(identifier)
+            val wasFirst = before?.stickers?.firstOrNull()?.imageFileName == imageFileName
+            val deleted = if (before == null) false
                 else database.deleteSticker(identifier, imageFileName, expectedVersion)
             drainDeletions()
+            if (deleted && wasFirst) {
+                val updated = database.getDraft(identifier)
+                val newFirst = updated?.stickers?.firstOrNull()
+                if (updated != null && newFirst != null) {
+                    try {
+                        val firstBytes = readAsset(identifier, newFirst.imageFileName, 512, STICKER_LIMIT)
+                        refreshTrayFromFirstSticker(identifier, updated.trayImageFile, firstBytes)
+                    } catch (_: Exception) {
+                        // Preserve existing tray if reading or re-encoding fails in unit test mocks.
+                    }
+                }
+            }
+            if (deleted) notifyProviderChange(identifier)
             deleted
         }
 
@@ -247,6 +275,7 @@ class StickerFileRepository(context: Context, private val database: TierruosData
         drainDeletions()
         // Also recover a directory left by a previously interrupted deletion.
         if (database.getDraft(identifier) == null) deletePackDirectory(identifier)
+        if (deleted) notifyProviderChange(identifier)
         deleted
     }
 
@@ -456,6 +485,49 @@ class StickerFileRepository(context: Context, private val database: TierruosData
             }
         } catch (error: ErrnoException) {
             if (error.errno != OsConstants.ENOENT) throw IOException("No se pudo verificar la ruta privada.", error)
+        }
+    }
+
+    private fun refreshTrayFromFirstSticker(identifier: String, trayFileName: String, stickerBytes: ByteArray) {
+        try {
+            val trayBytes = kotlinx.coroutines.runBlocking {
+                ImageSanitizerAndCompressor(appContext).createTrayFromSticker(stickerBytes).bytes
+            }
+            val validated = WebpAssetValidation.snapshot(trayBytes, 96, TRAY_LIMIT)
+            val directory = packDirectory(identifier)
+            ensureDirectory(root, directory)
+            val destination = assetFile(identifier, trayFileName)
+            val temporary = File.createTempFile(".tray-", ".tmp", directory)
+            try {
+                FileOutputStream(temporary).use { output ->
+                    output.write(validated)
+                    output.fd.sync()
+                }
+                if (destination.exists() && !destination.delete()) {
+                    temporary.delete()
+                    return
+                }
+                if (temporary.renameTo(destination)) {
+                    syncDirectory(directory)
+                } else {
+                    temporary.delete()
+                }
+            } catch (_: Throwable) {
+                if (temporary.exists()) temporary.delete()
+            }
+        } catch (_: Throwable) {
+            // Keep existing tray if regeneration cannot run.
+        }
+    }
+
+    private fun notifyProviderChange(identifier: String) {
+        try {
+            val resolver = appContext.contentResolver
+            resolver.notifyChange(StickerProviderContract.metadataUri(appContext), null)
+            resolver.notifyChange(StickerProviderContract.metadataUri(appContext, identifier), null)
+            resolver.notifyChange(StickerProviderContract.stickersUri(appContext, identifier), null)
+        } catch (_: Throwable) {
+            // ContentResolver notification is best-effort.
         }
     }
 

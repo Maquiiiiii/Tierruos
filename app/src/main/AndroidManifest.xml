@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <queries>
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
@@ -16,6 +19,7 @@
         android:theme="@style/Theme.Tierruos"
         android:usesCleartextTraffic="false">
         <activity android:name="com.tierruos.stickers.ui.StickerEditorActivity" android:exported="false" />
+        <activity android:name="com.tierruos.stickers.ui.StickerPackDetailActivity" android:exported="false" />
         <activity android:name="com.tierruos.stickers.ui.MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,6 +33,15 @@
             android:exported="true"
             android:grantUriPermissions="false"
             android:readPermission="com.whatsapp.sticker.READ" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

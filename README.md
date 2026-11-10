@@ -4,19 +4,21 @@
 
 App nativa en Kotlin para crear stickers de WhatsApp rápido, sin anuncios, sin permisos raros y pesando menos de 4 MB.
 
-[Descargar APK universal (v0.1.5)](https://github.com/Maquiiiiii/Tierruos/releases/download/v0.1.5/Tierruos-universal.apk) · [Todas las versiones y SHA-256](https://github.com/Maquiiiiii/Tierruos/releases)
+[Descargar APK universal (v0.1.6)](https://github.com/Maquiiiiii/Tierruos/releases/download/v0.1.6/Tierruos-universal.apk) · [Todas las versiones y SHA-256](https://github.com/Maquiiiiii/Tierruos/releases)
 
-- **Versión actual:** `0.1.5` (`versionCode = 6`)
-- **Tamaño del APK firmado:** `1.288.844 bytes` (~1,29 MB)
+- **Versión actual:** `0.1.6` (`versionCode = 7`)
+- **Tamaño del APK firmado:** `1.470.246 bytes` (~1,47 MB)
 - **Requisitos:** Android 7.0 (API 24) o superior
 
 ## Qué hace
 
 - Importa imágenes desde la galería (Photo Picker del sistema) o directamente desde el portapapeles.
 - Permite recortar a mano alzada (lazo), borrar fondo, mover/rotar/escalar, agregar borde blanco y texto, con deshacer por pasos.
+- Incluye vista de detalle por pack (`StickerPackDetailActivity`) con transición `MaterialContainerTransform`, cuadrícula de 3 columnas con celda especial `+ Agregar Sticker`, mini-navbar flotante con animación de agua para editar/reemplazar in-place o eliminar stickers individuales y botón de borrado de pack mantenido con física de líquido (`LiquidHoldDeleteButton`).
+- Integra actualizador nativo desde GitHub Releases al tocar el título `"Tierruos"`, con confirmación manual, barra de descarga en tiempo real y verificación de firma ZIP/APK (`PK\x03\x04`).
 - Normaliza cada sticker a WebP de `512x512 px` con margen interno de `16 px`, fondo transparente y menos de `98 KB`.
-- Genera automáticamente el ícono del pack (`tray.webp`) a `96x96 px` y menos de `48 KB` a partir del primer sticker, asignando emojis por defecto (`☕`) para pasar la validación de WhatsApp y WhatsApp Business.
-- Guarda todo en almacenamiento interno privado (`filesDir/stickers/` + SQLite) y lo expone a WhatsApp mediante un `ContentProvider` de solo lectura. No pide permiso de internet ni de lectura de almacenamiento global.
+- Genera y sincroniza automáticamente el ícono del pack (`tray.webp`) a `96x96 px` y menos de `48 KB` a partir del primer sticker, asignando emojis por defecto (`☕`) para pasar la validación de WhatsApp y WhatsApp Business.
+- Guarda todo en almacenamiento interno privado (`filesDir/stickers/` + SQLite) y lo expone a WhatsApp mediante un `ContentProvider` de solo lectura.
 
 ## Compilación desde código fuente
 

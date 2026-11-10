@@ -71,7 +71,7 @@ class StickerEditorActivity : TierruosActivity() {
         binding = ActivityStickerEditorBinding.inflate(layoutInflater)
         setContentView(binding.root); applyInsets(binding.root)
         packId = intent.getStringExtra(EXTRA_PACK_ID)
-        oldFileName = intent.getStringExtra(EXTRA_FILE_NAME)
+        oldFileName = intent.getStringExtra(EXTRA_EDIT_STICKER_ID) ?: intent.getStringExtra(EXTRA_FILE_NAME)
         newPackId = savedInstanceState?.getString("newPackId") ?: newPackId
         pendingFileName = savedInstanceState?.getString("pendingFileName") ?: pendingFileName
         expectedVersion = savedInstanceState?.getLong("version")?.takeIf { it > 0 }
@@ -432,6 +432,7 @@ class StickerEditorActivity : TierruosActivity() {
         const val EXTRA_PACK_ID = "pack_id"
         const val EXTRA_IMAGE_URI = "image_uri"
         const val EXTRA_FILE_NAME = "image_file_name"
+        const val EXTRA_EDIT_STICKER_ID = "edit_sticker_id"
         const val EXTRA_PASTE = "paste_image"
     }
 }

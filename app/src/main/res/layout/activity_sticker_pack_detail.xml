@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/detailRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface_card">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/space_16"
+        android:paddingTop="@dimen/space_12"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingBottom="@dimen/space_16">
+
+        <!-- Header: Circular back button (#1E1E26), pack title (hidden if \u2800), live counter, and 4dp progress bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/backButton"
+                style="@style/Widget.Tierruos.Tool"
+                android:layout_width="@dimen/touch_target_min"
+                android:layout_height="@dimen/touch_target_min"
+                android:background="@drawable/bg_circle_button"
+                android:contentDescription="@string/back_action"
+                android:src="@drawable/ic_back"
+                app:tint="@color/text_primary" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_12"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/detailPackTitle"
+                    style="@style/Widget.Tierruos.Title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance.Tierruos.CardTitle"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/detailPackPublisher"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance.Tierruos.Caption"
+                    android:textColor="@color/text_secondary"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/detailStickerCounter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFeatureSettings="tnum"
+                    android:textAppearance="@style/TextAppearance.Tierruos.Counter"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/detailProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/progress_track_height"
+            android:layout_marginTop="@dimen/space_12"
+            android:layout_marginBottom="@dimen/space_12"
+            android:importantForAccessibility="no"
+            android:indeterminate="false"
+            android:max="30"
+            android:progress="0"
+            android:progressDrawable="@drawable/bg_pack_progress" />
+
+        <!-- 3-Column RecyclerView Grid -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/stickerRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingBottom="@dimen/space_12"
+            android:scrollbars="vertical" />
+
+        <!-- Bottom Action Zone: Primary "Agregar a WhatsApp" button + LiquidHoldDeleteButton -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_8"
+            android:orientation="vertical">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/exportPackButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_export_primary_18dp"
+                android:fontFamily="sans-serif-medium"
+                android:fontFeatureSettings="tnum"
+                android:gravity="center"
+                android:paddingStart="@dimen/space_16"
+                android:paddingEnd="@dimen/space_16"
+                android:stateListAnimator="@null"
+                android:text="@string/add_whatsapp"
+                android:textAllCaps="false"
+                android:textColor="#0A0A0C"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <com.tierruos.stickers.ui.LiquidHoldDeleteButton
+                android:id="@+id/liquidDeletePackButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="@dimen/space_10" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <include
+        android:id="@+id/loading"
+        layout="@layout/view_busy_overlay" />
+</FrameLayout>

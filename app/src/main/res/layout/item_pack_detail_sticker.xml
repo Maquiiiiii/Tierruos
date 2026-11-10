@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.tierruos.stickers.ui.SquareSlotFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/stickerCellRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:background="@drawable/bg_detail_sticker_slot"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackgroundBorderless"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/stickerImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:scaleType="fitCenter" />
+
+    <ProgressBar
+        android:id="@+id/stickerLoading"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/accent_primary" />
+</com.tierruos.stickers.ui.SquareSlotFrameLayout>
