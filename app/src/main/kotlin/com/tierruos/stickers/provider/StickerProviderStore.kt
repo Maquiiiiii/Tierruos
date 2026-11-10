@@ -13,8 +13,6 @@ import com.tierruos.stickers.data.db.TierruosDatabaseHelper
 import com.tierruos.stickers.data.model.Sticker
 import com.tierruos.stickers.data.model.StickerPackDraft
 import com.tierruos.stickers.data.repository.StickerFileRepository
-import com.tierruos.stickers.data.repository.WebpAssetValidation
-import java.io.DataInputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -26,13 +24,34 @@ internal class StickerProviderStore(context: Context, private val database: Tier
 
     fun metadata(identifier: String?, projection: Array<out String>?): MatrixCursor = StickerStorageCoordinator.lock.withLock {
         if (identifier != null) StickerStorageNames.requireIdentifier(identifier)
-        val columns = columns(projection, StickerProviderContract.metadataColumns)
-        val cursor = MatrixCursor(columns)
+        val requested = columns(projection, StickerProviderContract.metadataColumns)
+        val cursor = StickerContentProvider.newMetadataCursor(requested)
+        val cursorColumns = cursor.columnNames
         fun add(pack: StickerPackDraft) {
             if (!pack.isExportable) return
-            val values = arrayOf<Any>(pack.identifier, pack.name, pack.publisher, pack.trayImageFile,
-                "", "", "", "", "", "", pack.imageDataVersion.toString(), if (pack.avoidCache) 1 else 0, 0)
-            cursor.addRow(columns.map { values[StickerProviderContract.metadataColumns.indexOf(it)] })
+            val exportedName = pack.name.replace("\u2800", "").trim().ifEmpty { "Tierruos" }
+            val exportedPublisher = pack.publisher.replace("\u2800", "").trim().ifEmpty { "Tierruos" }
+            val values = arrayOf<Any>(
+                pack.identifier,
+                exportedName,
+                exportedPublisher,
+                pack.trayImageFile,
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                pack.imageDataVersion.toString(),
+                if (pack.avoidCache) 1 else 0,
+                StickerContentProvider.STATIC_STICKER_PACK_VALUE,
+            )
+            cursor.addRow(
+                cursorColumns.map { col ->
+                    if (col == StickerProviderContract.IOS_APP_STORE_LINK) ""
+                    else values[StickerProviderContract.metadataColumns.indexOf(col)]
+                }
+            )
         }
         if (identifier != null) database.getDraft(identifier)?.let(::add) else {
             var offset = 0
@@ -51,7 +70,7 @@ internal class StickerProviderStore(context: Context, private val database: Tier
         MatrixCursor(columns).apply {
             val pack = database.getDraft(identifier)
             if (pack?.isExportable == true) pack.stickers.forEach { sticker ->
-                val emojis = sticker.emojis.ifEmpty { Sticker.DEFAULT_EMOJIS }.joinToString(",")
+                val emojis = StickerContentProvider.formatStickerEmojis(sticker.emojis)
                 val values = arrayOf(sticker.imageFileName, emojis, "")
                 addRow(columns.map { values[StickerProviderContract.stickerColumns.indexOf(it)] })
             }
@@ -77,40 +96,32 @@ internal class StickerProviderStore(context: Context, private val database: Tier
         val tray = fileName == pack.trayImageFile || fileName == StickerFileRepository.TRAY_FILE_NAME
         val sticker = pack.stickers.firstOrNull { it.imageFileName == fileName }
         if (!tray && sticker == null) throw FileNotFoundException("La imagen no está registrada en el pack.")
-        val resolvedFileName = if (tray) pack.trayImageFile else fileName
 
         val privateRoot = app.filesDir.canonicalFile
         val root = safeChild(privateRoot, "stickers")
         val directory = safeChild(root, identifier)
-        val file = safeChild(directory, resolvedFileName)
+        val file = if (tray) {
+            val requested = safeChild(directory, fileName)
+            val configured = safeChild(directory, pack.trayImageFile)
+            val defaultTray = safeChild(directory, StickerFileRepository.TRAY_FILE_NAME)
+            when {
+                requested.isFile -> requested
+                configured.isFile -> configured
+                defaultTray.isFile -> defaultTray
+                else -> requested
+            }
+        } else {
+            safeChild(directory, sticker!!.imageFileName)
+        }
         if (!file.canonicalPath.startsWith(root.canonicalPath + File.separator)) {
             throw SecurityException("La imagen debe pertenecer al directorio privado de stickers.")
         }
         val before = Os.lstat(file.path)
         if (!OsConstants.S_ISREG(before.st_mode)) throw SecurityException("La imagen debe ser un archivo regular.")
-        val limit = if (tray) 48_000 else 98_000
-        if (before.st_size !in 1 until limit.toLong() || (!tray && before.st_size != sticker!!.sizeInBytes.toLong())) {
-            throw FileNotFoundException("El tamaño de la imagen registrada es inválido.")
+        if (!file.isFile || file.length() <= 0L) {
+            throw FileNotFoundException("El archivo de imagen no existe o está vacío.")
         }
-        val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-        return try {
-            val opened = Os.fstat(descriptor.fileDescriptor)
-            if (!OsConstants.S_ISREG(opened.st_mode) || opened.st_ino != before.st_ino ||
-                opened.st_dev != before.st_dev || opened.st_size != before.st_size) {
-                throw SecurityException("La imagen cambió durante la apertura.")
-            }
-            val bytes = ByteArray(opened.st_size.toInt())
-            DataInputStream(ParcelFileDescriptor.AutoCloseInputStream(ParcelFileDescriptor.dup(descriptor.fileDescriptor))).use {
-                it.readFully(bytes)
-                if (it.read() != -1) throw SecurityException("La imagen cambió de tamaño.")
-            }
-            WebpAssetValidation.snapshot(bytes, if (tray) 96 else 512, limit)
-            Os.lseek(descriptor.fileDescriptor, 0, OsConstants.SEEK_SET)
-            AssetFileDescriptor(descriptor, 0, opened.st_size)
-        } catch (failure: Throwable) {
-            try { descriptor.close() } catch (closeFailure: Throwable) { failure.addSuppressed(closeFailure) }
-            throw failure
-        }
+        return StickerContentProvider.openReadOnlyAssetDescriptor(file)
     }
 
     private fun safeChild(parent: File, name: String): File {

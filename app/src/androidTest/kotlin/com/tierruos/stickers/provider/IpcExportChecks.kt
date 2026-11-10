@@ -62,6 +62,8 @@ internal class IpcExportChecks(private val instrumentation: Instrumentation) {
                 check(cursor.columnNames.contentEquals(StickerProviderContract.metadataColumns))
                 check(cursor.moveToFirst() && cursor.count == 1)
                 check(cursor.getString(0) == id && cursor.getString(3) == pack.trayImageFile)
+                check(cursor.getColumnName(5) == StickerProviderContract.IOS_APP_DOWNLOAD_LINK)
+                check(cursor.getColumnName(12) == StickerProviderContract.ANIMATED_STICKER_PACK)
                 check(cursor.getString(10) == pack.imageDataVersion.toString())
                 check(cursor.getInt(11) == 0 && cursor.getInt(12) == 0)
                 check(cursor.getString(4).isEmpty())
@@ -69,13 +71,18 @@ internal class IpcExportChecks(private val instrumentation: Instrumentation) {
             storage.repository.updatePackMetadata(id, "Pack", "Tierruos", true)
             store().metadata(id, arrayOf("whatsapp_will_not_cache_stickers")).use {
                 check(it.moveToFirst() && it.getInt(0) == 1)
+                check(it.getInt(it.getColumnIndexOrThrow(StickerProviderContract.ANIMATED_STICKER_PACK)) == 0)
             }
         } },
         Check("ipcStickerCursorPreservesOrderAndEmojiCsv") { withPack { id ->
+            check(StickerContentProvider.formatStickerEmojis(listOf("[☕]")) == "☕")
+            check(StickerContentProvider.formatStickerEmojis(listOf("[☕, 😀]")) == "☕,😀")
+            check(StickerContentProvider.formatStickerEmojis(emptyList()) == "☕")
             store().stickers(id, null).use {
                 check(it.columnNames.contentEquals(StickerProviderContract.stickerColumns))
                 check(it.count == 3 && it.moveToFirst())
                 check(it.getString(0) == "s0.webp" && it.getString(1) == "😀,🥑" && it.getString(2).isEmpty())
+                check(!it.getString(1).contains("[") && !it.getString(1).contains("]"))
                 check(it.moveToNext() && it.getString(0) == "s1.webp")
             }
         } },
@@ -185,6 +192,19 @@ internal class IpcExportChecks(private val instrumentation: Instrumentation) {
             File(app.filesDir, "stickers/$id/${before.trayImageFile}").writeBytes(requireNotNull(stickerBytes))
             expect<InvalidImageFormatException> { exporter(listOf(consumer)).prepareIntent(id) }
             check(storage.database.getPack(id)!!.imageDataVersion == before.imageDataVersion)
+        } },
+        Check("exportAutoGeneratesMissingTrayAndRescalesStickerTo512") { withPack { id ->
+            val packDir = File(app.filesDir, "stickers/$id")
+            val trayFile = File(packDir, "tray.webp")
+            check(trayFile.delete() && !trayFile.exists())
+            // Write a valid 96x96 WebP into s2.webp to simulate a non-512x512 sticker on disk
+            val s2File = File(packDir, "s2.webp")
+            s2File.writeBytes(requireNotNull(trayBytes))
+            exporter(listOf(consumer)).prepareIntent(id)
+            check(trayFile.isFile && trayFile.length() in 1 until 48_000L)
+            val s2Bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            android.graphics.BitmapFactory.decodeFile(s2File.absolutePath, s2Bounds)
+            check(s2Bounds.outWidth == 512 && s2Bounds.outHeight == 512)
         } },
         Check("exportMissingStickerCannotLaunchOrAdvanceVersion") { withPack { id ->
             val before = storage.database.getPack(id)!!.imageDataVersion

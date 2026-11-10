@@ -99,6 +99,21 @@ class ImageSanitizerAndCompressor(context: Context) {
         }
     }
 
+    /** Re-draws an existing sticker onto a clean 512 x 512 ARGB_8888 transparent canvas with 16 px padding. */
+    suspend fun rescaleStickerTo512(sourceBytes: ByteArray): CompressedImage = withContext(Dispatchers.IO) {
+        val options = BitmapFactory.Options().apply {
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+            inScaled = false
+        }
+        val decoded = BitmapFactory.decodeByteArray(sourceBytes, 0, sourceBytes.size, options)
+            ?: throw InvalidImageFormatException("No se pudo decodificar el sticker existente para re-escalarlo a 512x512.")
+        try {
+            encodeEditorBitmap(decoded, STICKER_EDGE, STICKER_MAX_BYTES, STICKER_PADDING_PX)
+        } finally {
+            decoded.recycle()
+        }
+    }
+
     private suspend fun encodeEditorBitmap(
         source: Bitmap,
         edge: Int,

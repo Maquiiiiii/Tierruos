@@ -8,14 +8,20 @@ object StickerProviderContract {
     const val AUTHORITY_SUFFIX = ".stickercontentprovider"
     const val WHATSAPP = "com.whatsapp"
     const val WHATSAPP_BUSINESS = "com.whatsapp.w4b"
+    const val IOS_APP_DOWNLOAD_LINK = "ios_app_download_link"
+    const val IOS_APP_STORE_LINK = "ios_app_store_link"
+    const val ANIMATED_STICKER_PACK = "animated_sticker_pack"
+    const val STICKER_FILE_NAME = "sticker_file_name"
+    const val STICKER_EMOJI = "sticker_emoji"
+    const val STICKER_ACCESSIBILITY_TEXT = "sticker_accessibility_text"
     internal val metadataColumns = arrayOf(
         "sticker_pack_identifier", "sticker_pack_name", "sticker_pack_publisher", "sticker_pack_icon",
-        "android_play_store_link", "ios_app_store_link", "sticker_pack_publisher_email",
+        "android_play_store_link", IOS_APP_DOWNLOAD_LINK, "sticker_pack_publisher_email",
         "sticker_pack_publisher_website", "sticker_pack_privacy_policy_website",
         "sticker_pack_license_agreement_website", "image_data_version",
-        "whatsapp_will_not_cache_stickers", "animated_sticker_pack",
+        "whatsapp_will_not_cache_stickers", ANIMATED_STICKER_PACK,
     )
-    internal val stickerColumns = arrayOf("sticker_file_name", "sticker_emoji", "sticker_accessibility_text")
+    internal val stickerColumns = arrayOf(STICKER_FILE_NAME, STICKER_EMOJI, STICKER_ACCESSIBILITY_TEXT)
 
     fun authority(context: Context): String = context.applicationContext.packageName + AUTHORITY_SUFFIX
     fun metadataUri(context: Context): Uri = Uri.Builder().scheme("content").authority(authority(context))

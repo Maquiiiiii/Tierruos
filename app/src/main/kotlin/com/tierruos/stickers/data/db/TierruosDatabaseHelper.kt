@@ -34,6 +34,25 @@ class TierruosDatabaseHelper(
         db.execSQL("PRAGMA synchronous=FULL")
     }
 
+    override fun onOpen(db: SQLiteDatabase) {
+        super.onOpen(db)
+        if (!db.isReadOnly) {
+            db.execSQL(
+                "UPDATE stickers SET emoji_1 = ? WHERE emoji_1 IS NULL OR trim(emoji_1) = ''",
+                arrayOf(Sticker.DEFAULT_EMOJI),
+            )
+            for (column in listOf("emoji_1", "emoji_2", "emoji_3")) {
+                db.execSQL(
+                    "UPDATE stickers SET $column = trim(replace(replace($column, '[', ''), ']', '')) WHERE $column LIKE '%[%' OR $column LIKE '%]%'",
+                )
+            }
+            db.execSQL(
+                "UPDATE stickers SET emoji_1 = ? WHERE emoji_1 IS NULL OR trim(emoji_1) = ''",
+                arrayOf(Sticker.DEFAULT_EMOJI),
+            )
+        }
+    }
+
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
             CREATE TABLE packs (
@@ -268,6 +287,24 @@ class TierruosDatabaseHelper(
         } ?: emptySet()
     }
 
+    internal fun syncStickerFileSize(identifier: String, imageFileName: String, sizeBytes: Int) = transaction { db ->
+        StickerStorageNames.requireIdentifier(identifier)
+        StickerStorageNames.requireImageFileName(imageFileName)
+        require(sizeBytes in 1..97_999)
+        val values = ContentValues().apply { put("size_bytes", sizeBytes) }
+        db.update("stickers", values, "pack_identifier=? AND image_file_name=?", arrayOf(identifier, imageFileName))
+        Unit
+    }
+
+    internal fun syncTrayImageFile(identifier: String, trayFileName: String) = transaction { db ->
+        StickerStorageNames.requireIdentifier(identifier)
+        StickerStorageNames.requireImageFileName(trayFileName)
+        val values = ContentValues().apply { put("tray_image_file", trayFileName) }
+        db.update("packs", values, "identifier=?", arrayOf(identifier))
+        db.delete("pending_file_deletions", "pack_identifier=? AND image_file_name=?", arrayOf(identifier, trayFileName))
+        Unit
+    }
+
     override fun close() = StickerStorageCoordinator.lock.withLock { super.close() }
 
     private fun insertPackRow(db: SQLiteDatabase, value: StickerPackDraft) {
@@ -289,7 +326,7 @@ class TierruosDatabaseHelper(
     }
 
     private fun stickerValues(value: Sticker) = ContentValues().apply {
-        val emojis = value.emojis.ifEmpty { Sticker.DEFAULT_EMOJIS }
+        val emojis = cleanEmojis(value.emojis)
         put("image_file_name", value.imageFileName)
         put("size_bytes", value.sizeInBytes)
         for (i in 0..2) {
@@ -333,11 +370,19 @@ class TierruosDatabaseHelper(
         }
 
     private fun Cursor.sticker(): Sticker {
-        val emojis = buildList {
+        val raw = buildList {
             for (column in 2..4) if (!isNull(column)) add(getString(column))
-        }.ifEmpty { Sticker.DEFAULT_EMOJIS }
-        return Sticker(getString(0), getLong(1) / 1_000.0, emojis).snapshot()
+        }
+        return Sticker(getString(0), getLong(1) / 1_000.0, cleanEmojis(raw)).snapshot()
     }
+
+    private fun cleanEmojis(emojis: List<String>): List<String> =
+        emojis
+            .flatMap { raw -> raw.removeSurrounding("[", "]").split(",") }
+            .map { it.trim().removeSurrounding("[", "]").trim() }
+            .filter { it.isNotEmpty() }
+            .ifEmpty { Sticker.DEFAULT_EMOJIS }
+            .take(3)
 
     private inline fun <T> read(block: (SQLiteDatabase) -> T): T =
         StickerStorageCoordinator.lock.withLock { block(readableDatabase) }

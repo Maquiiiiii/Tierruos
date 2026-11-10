@@ -5,11 +5,14 @@ import android.content.ContentValues
 import android.content.UriMatcher
 import android.content.res.AssetFileDescriptor
 import android.database.Cursor
+import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import com.tierruos.stickers.data.TierruosStorage
+import com.tierruos.stickers.data.model.Sticker
+import java.io.File
 
 /** Read-only IPC. Authorization runs before resolving a URI, reading SQLite or touching files. */
 class StickerContentProvider : ContentProvider() {
@@ -106,9 +109,32 @@ class StickerContentProvider : ContentProvider() {
     }
 
     companion object {
+        const val ANIMATED_STICKER_PACK = StickerProviderContract.ANIMATED_STICKER_PACK
+        const val STATIC_STICKER_PACK_VALUE = 0
         private const val METADATA = 1
         private const val SINGLE_PACK = 2
         private const val STICKERS = 3
         private const val ASSET = 4
+
+        internal fun formatStickerEmojis(emojis: List<String>): String =
+            emojis
+                .flatMap { raw -> raw.removeSurrounding("[", "]").split(",") }
+                .map { it.trim().removeSurrounding("[", "]").trim() }
+                .filter { it.isNotEmpty() }
+                .ifEmpty { Sticker.DEFAULT_EMOJIS }
+                .take(3)
+                .joinToString(",")
+
+        internal fun openReadOnlyAssetDescriptor(file: File): AssetFileDescriptor =
+            AssetFileDescriptor(
+                ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY),
+                0,
+                file.length(),
+            )
+
+        internal fun newMetadataCursor(columns: Array<String>): MatrixCursor {
+            val resolved = if (ANIMATED_STICKER_PACK in columns) columns else columns + ANIMATED_STICKER_PACK
+            return MatrixCursor(resolved)
+        }
     }
 }

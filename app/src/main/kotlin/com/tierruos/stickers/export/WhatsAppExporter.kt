@@ -5,10 +5,22 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import com.tierruos.stickers.R
+import com.tierruos.stickers.data.StickerStorageCoordinator
 import com.tierruos.stickers.data.TierruosStorage
 import com.tierruos.stickers.data.repository.StickerFileRepository
 import com.tierruos.stickers.provider.StickerProviderContract
+import com.tierruos.stickers.security.ImageSanitizerAndCompressor
+import java.io.File
+import java.io.FileOutputStream
+import kotlin.concurrent.withLock
+import kotlin.math.min
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,18 +72,101 @@ class WhatsAppExporter internal constructor(
             it.packageName == StickerProviderContract.WHATSAPP || it.packageName == StickerProviderContract.WHATSAPP_BUSINESS
         }.filter { target == null || it.packageName == target.packageName }.distinctBy { it.packageName }
         if (available.isEmpty()) throw WhatsAppUnavailableException()
+        ensurePackAssetsBeforeExport(identifier)
         val pack = repository.preparePackForExport(identifier)
+        val exportedName = pack.name.replace("\u2800", "").trim().ifEmpty { "Tierruos" }
         val intents = available.map { component ->
             Intent(ACTION_ENABLE_STICKER_PACK).setComponent(component)
                 .putExtra(EXTRA_PACK_ID, pack.identifier)
                 .putExtra(EXTRA_PACK_AUTHORITY, StickerProviderContract.authority(app))
-                .putExtra(EXTRA_PACK_NAME, pack.name)
+                .putExtra(EXTRA_PACK_NAME, exportedName)
         }
         app.contentResolver.notifyChange(StickerProviderContract.metadataUri(app), null)
         app.contentResolver.notifyChange(StickerProviderContract.metadataUri(app, pack.identifier), null)
         app.contentResolver.notifyChange(StickerProviderContract.stickersUri(app, pack.identifier), null)
         if (intents.size == 1) intents.single() else Intent.createChooser(intents.first(), app.getString(R.string.export_choose_whatsapp))
             .putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.drop(1).toTypedArray())
+    }
+
+    /**
+     * Ensures every sticker on disk is 512x512 WebP (rescaling onto a transparent ARGB_8888 canvas if not)
+     * and creates `tray.webp` (96x96, < 48 KB) from the first sticker if `tray.webp` is missing on disk.
+     */
+    private suspend fun ensurePackAssetsBeforeExport(identifier: String) {
+        val draft = repository.getDraft(identifier) ?: return
+        if (!draft.isExportable) return
+        val packDir = File(File(app.filesDir.canonicalFile, "stickers"), identifier)
+        if (!packDir.isDirectory) return
+        val compressor = ImageSanitizerAndCompressor(app)
+
+        for (sticker in draft.stickers) {
+            val stickerFile = File(packDir, sticker.imageFileName)
+            if (!stickerFile.isFile) continue
+            val bounds = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+                inScaled = false
+            }
+            BitmapFactory.decodeFile(stickerFile.absolutePath, bounds)
+            if (bounds.outWidth in 1..8000 && bounds.outHeight in 1..8000 &&
+                (bounds.outWidth != 512 || bounds.outHeight != 512 || bounds.outMimeType != "image/webp")
+            ) {
+                val decodeOpts = BitmapFactory.Options().apply {
+                    inPreferredConfig = Bitmap.Config.ARGB_8888
+                    inScaled = false
+                }
+                val decoded = BitmapFactory.decodeFile(stickerFile.absolutePath, decodeOpts)
+                if (decoded != null) {
+                    val canvasBitmap = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
+                    val reencoded = try {
+                        canvasBitmap.eraseColor(Color.TRANSPARENT)
+                        val available = (512 - 2 * ImageSanitizerAndCompressor.STICKER_PADDING_PX).toFloat()
+                        val scale = min(available / decoded.width, available / decoded.height)
+                        val w = decoded.width * scale
+                        val h = decoded.height * scale
+                        val left = (512f - w) / 2f
+                        val top = (512f - h) / 2f
+                        Canvas(canvasBitmap).drawBitmap(
+                            decoded,
+                            null,
+                            RectF(left, top, left + w, top + h),
+                            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG),
+                        )
+                        compressor.compressStickerBitmap(canvasBitmap)
+                    } finally {
+                        canvasBitmap.recycle()
+                        decoded.recycle()
+                    }
+                    StickerStorageCoordinator.lock.withLock {
+                        FileOutputStream(stickerFile).use { out ->
+                            out.write(reencoded.bytes)
+                            out.fd.sync()
+                        }
+                        repository.syncStickerFileSize(identifier, sticker.imageFileName, reencoded.bytes.size)
+                    }
+                }
+            } else if (stickerFile.length() in 1 until ImageSanitizerAndCompressor.STICKER_MAX_BYTES.toLong() &&
+                stickerFile.length().toInt() != sticker.sizeInBytes
+            ) {
+                StickerStorageCoordinator.lock.withLock {
+                    repository.syncStickerFileSize(identifier, sticker.imageFileName, stickerFile.length().toInt())
+                }
+            }
+        }
+
+        val trayFile = File(packDir, StickerFileRepository.TRAY_FILE_NAME)
+        if (!trayFile.exists()) {
+            val firstStickerFile = File(packDir, draft.stickers.first().imageFileName)
+            if (firstStickerFile.isFile) {
+                val trayImage = compressor.createTrayFromSticker(firstStickerFile.readBytes())
+                StickerStorageCoordinator.lock.withLock {
+                    FileOutputStream(trayFile).use { out ->
+                        out.write(trayImage.bytes)
+                        out.fd.sync()
+                    }
+                    repository.syncTrayImageFile(identifier, StickerFileRepository.TRAY_FILE_NAME)
+                }
+            }
+        }
     }
 
     private fun checkActivity(activity: Activity) {

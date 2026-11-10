@@ -101,6 +101,14 @@ class StickerFileRepository(context: Context, private val database: TierruosData
         database.advanceImageDataVersion(identifier, pack.imageDataVersion)
     }
 
+    internal fun syncStickerFileSize(identifier: String, imageFileName: String, sizeBytes: Int) {
+        database.syncStickerFileSize(identifier, imageFileName, sizeBytes)
+    }
+
+    internal fun syncTrayImageFile(identifier: String, trayFileName: String = TRAY_FILE_NAME) {
+        database.syncTrayImageFile(identifier, trayFileName)
+    }
+
     private fun checkedExportablePack(identifier: String, job: CoroutineContext): StickerPack {
         val pack = database.getPack(identifier) ?: throw NoSuchElementException("El pack no existe.")
         readAsset(identifier, pack.trayImageFile, 96, TRAY_LIMIT)
