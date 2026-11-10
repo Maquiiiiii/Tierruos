@@ -290,8 +290,8 @@ class StickerEditorActivity : TierruosActivity() {
         modal.setOnDismissListener { dialog = null }
         modal.setOnShowListener {
             modal.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val name = content.packName.text.toString().trim().ifBlank { INVISIBLE_CHAR }
-                val publisher = content.publisher.text.toString().trim().ifBlank { INVISIBLE_CHAR }
+                val name = content.packName.text.toString().trim().ifBlank { INVISIBLE_NAME }
+                val publisher = content.publisher.text.toString().trim().ifBlank { INVISIBLE_NAME }
                 if (!blocked()) { modal.dismiss(); saveSticker(name, publisher) }
             }
         }
@@ -321,8 +321,8 @@ class StickerEditorActivity : TierruosActivity() {
                     if (previous == null) {
                         repository.createPackWithSticker(
                             newPackId,
-                            name.trim().ifBlank { INVISIBLE_CHAR },
-                            publisher.trim().ifBlank { INVISIBLE_CHAR },
+                            name.trim().ifBlank { INVISIBLE_NAME },
+                            publisher.trim().ifBlank { INVISIBLE_NAME },
                             image.bytes,
                             tray.bytes,
                             pendingFileName,
@@ -415,7 +415,8 @@ class StickerEditorActivity : TierruosActivity() {
     override fun onDestroy() { dialog?.dismiss(); dialog = null; super.onDestroy() }
 
     companion object {
-        const val INVISIBLE_CHAR = "\u2800"
+        const val INVISIBLE_NAME = "\u2800"
+        const val INVISIBLE_CHAR = INVISIBLE_NAME
         const val EXTRA_PACK_ID = "pack_id"
         const val EXTRA_IMAGE_URI = "image_uri"
         const val EXTRA_FILE_NAME = "image_file_name"

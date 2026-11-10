@@ -14,6 +14,7 @@ import android.graphics.RectF
 import com.tierruos.stickers.R
 import com.tierruos.stickers.data.StickerStorageCoordinator
 import com.tierruos.stickers.data.TierruosStorage
+import com.tierruos.stickers.data.db.TierruosDatabaseHelper
 import com.tierruos.stickers.data.repository.StickerFileRepository
 import com.tierruos.stickers.provider.StickerProviderContract
 import com.tierruos.stickers.security.ImageSanitizerAndCompressor
@@ -74,7 +75,7 @@ class WhatsAppExporter internal constructor(
         if (available.isEmpty()) throw WhatsAppUnavailableException()
         ensurePackAssetsBeforeExport(identifier)
         val pack = repository.preparePackForExport(identifier)
-        val exportedName = pack.name.replace("\u2800", "").trim().ifEmpty { "Tierruos" }
+        val exportedName = pack.name.trim().ifEmpty { TierruosDatabaseHelper.INVISIBLE_NAME }
         val intents = available.map { component ->
             Intent(ACTION_ENABLE_STICKER_PACK).setComponent(component)
                 .putExtra(EXTRA_PACK_ID, pack.identifier)

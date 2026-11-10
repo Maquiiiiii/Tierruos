@@ -12,7 +12,7 @@
                 android:layout_marginStart="@dimen/space_8" android:layout_marginEnd="@dimen/space_8"
                 android:textAppearance="@style/TextAppearance.Tierruos.Caption" />
             <GridLayout android:id="@+id/stickerGrid" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_16" android:columnCount="3" android:alignmentMode="alignMargins" />
+                android:layout_marginTop="0dp" android:columnCount="3" android:alignmentMode="alignMargins" />
             <TextView android:id="@+id/packProgress" style="@style/Widget.Tierruos.Title" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:layout_margin="@dimen/space_8"
                 android:textAppearance="@style/TextAppearance.Tierruos.Counter" android:fontFeatureSettings="tnum" />

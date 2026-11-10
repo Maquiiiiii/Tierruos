@@ -29,8 +29,8 @@ internal class StickerProviderStore(context: Context, private val database: Tier
         val cursorColumns = cursor.columnNames
         fun add(pack: StickerPackDraft) {
             if (!pack.isExportable) return
-            val exportedName = pack.name.replace("\u2800", "").trim().ifEmpty { "Tierruos" }
-            val exportedPublisher = pack.publisher.replace("\u2800", "").trim().ifEmpty { "Tierruos" }
+            val exportedName = pack.name.trim().ifEmpty { TierruosDatabaseHelper.INVISIBLE_NAME }
+            val exportedPublisher = pack.publisher.trim().ifEmpty { TierruosDatabaseHelper.INVISIBLE_NAME }
             val values = arrayOf<Any>(
                 pack.identifier,
                 exportedName,

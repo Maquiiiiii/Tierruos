@@ -50,6 +50,14 @@ class TierruosDatabaseHelper(
                 "UPDATE stickers SET emoji_1 = ? WHERE emoji_1 IS NULL OR trim(emoji_1) = ''",
                 arrayOf(Sticker.DEFAULT_EMOJI),
             )
+            db.execSQL(
+                "UPDATE packs SET name = ? WHERE name IS NULL OR trim(name) = ''",
+                arrayOf(INVISIBLE_NAME),
+            )
+            db.execSQL(
+                "UPDATE packs SET publisher = ? WHERE publisher IS NULL OR trim(publisher) = ''",
+                arrayOf(INVISIBLE_NAME),
+            )
         }
     }
 
@@ -321,7 +329,9 @@ class TierruosDatabaseHelper(
     }
 
     private fun packValues(name: String, publisher: String, tray: String, avoidCache: Boolean) = ContentValues().apply {
-        put("name", name); put("publisher", publisher); put("tray_image_file", tray)
+        val resolvedName = name.trim().ifEmpty { INVISIBLE_NAME }
+        val resolvedPublisher = publisher.trim().ifEmpty { INVISIBLE_NAME }
+        put("name", resolvedName); put("publisher", resolvedPublisher); put("tray_image_file", tray)
         put("avoid_cache", if (avoidCache) 1 else 0)
     }
 
@@ -400,6 +410,7 @@ class TierruosDatabaseHelper(
 
     companion object {
         const val DATABASE_NAME = "tierruos.db"
+        const val INVISIBLE_NAME = "\u2800"
         private const val DATABASE_VERSION = 1
         private val PRESERVE_CORRUPTION = DatabaseErrorHandler {
             throw SQLiteDatabaseCorruptException("La base de datos está dañada; se conservan la base y sus imágenes.")

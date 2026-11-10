@@ -23,6 +23,7 @@ import com.tierruos.stickers.security.ImageFixtures
 import com.tierruos.stickers.security.ImageSanitizerAndCompressor
 import com.tierruos.stickers.security.InvalidImageFormatException
 import com.tierruos.stickers.ui.DesignPreviewActivity
+import com.tierruos.stickers.ui.StickerEditorActivity
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.concurrent.CountDownLatch
@@ -205,6 +206,16 @@ internal class IpcExportChecks(private val instrumentation: Instrumentation) {
             val s2Bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
             android.graphics.BitmapFactory.decodeFile(s2File.absolutePath, s2Bounds)
             check(s2Bounds.outWidth == 512 && s2Bounds.outHeight == 512)
+        } },
+        Check("ipcAnonymousPackKeepsInvisibleNameInMetadataAndExport") { withPack { id ->
+            storage.repository.updatePackMetadata(id, StickerEditorActivity.INVISIBLE_NAME, StickerEditorActivity.INVISIBLE_NAME, false)
+            store().metadata(id, null).use { cursor ->
+                check(cursor.moveToFirst())
+                check(cursor.getString(1) == StickerEditorActivity.INVISIBLE_NAME)
+                check(cursor.getString(2) == StickerEditorActivity.INVISIBLE_NAME)
+            }
+            val intent = exporter(listOf(consumer)).prepareIntent(id)
+            check(intent.getStringExtra(WhatsAppExporter.EXTRA_PACK_NAME) == StickerEditorActivity.INVISIBLE_NAME)
         } },
         Check("exportMissingStickerCannotLaunchOrAdvanceVersion") { withPack { id ->
             val before = storage.database.getPack(id)!!.imageDataVersion
