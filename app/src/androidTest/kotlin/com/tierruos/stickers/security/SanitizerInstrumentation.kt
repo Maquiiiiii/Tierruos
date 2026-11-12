@@ -12,6 +12,7 @@ import com.tierruos.stickers.ui.CanvasChecks
 import com.tierruos.stickers.data.DataChecks
 import com.tierruos.stickers.provider.IpcExportChecks
 import com.tierruos.stickers.ui.PresentationChecks
+import com.tierruos.stickers.ui.ImageSearchChecks
 import java.io.File
 import java.io.RandomAccessFile
 import kotlinx.coroutines.async
@@ -27,9 +28,11 @@ import kotlinx.coroutines.withTimeout
 class SanitizerInstrumentation : Instrumentation() {
     private lateinit var engine: ImageSanitizerAndCompressor
     private lateinit var fixtures: File
+    private var testPrefix: String? = null
 
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
+        testPrefix = arguments?.getString("testPrefix")
         start()
     }
 
@@ -40,7 +43,7 @@ class SanitizerInstrumentation : Instrumentation() {
         engine = ImageSanitizerAndCompressor(targetContext)
         fixtures = File(targetContext.cacheDir, "sanitizer-tests-${System.nanoTime()}")
         check(fixtures.mkdirs())
-        val cases = listOf(
+        val allCases = listOf(
             Case("pngJpegWebpNormalizeAndCenter") {
                 for (format in listOf(Bitmap.CompressFormat.PNG, Bitmap.CompressFormat.JPEG, Bitmap.CompressFormat.WEBP)) {
                     val result = engine.createSticker(fixture(ImageFixtures.solidImage(format)))
@@ -150,7 +153,9 @@ class SanitizerInstrumentation : Instrumentation() {
         ) + CanvasChecks(this@SanitizerInstrumentation).cases().map { Case(it.name, it.body) } +
             DataChecks(this@SanitizerInstrumentation).cases().map { Case(it.name, it.body) } +
             IpcExportChecks(this@SanitizerInstrumentation).cases().map { Case(it.name, it.body) } +
-            PresentationChecks(this@SanitizerInstrumentation).cases().map { Case(it.name, it.body) }
+            PresentationChecks(this@SanitizerInstrumentation).cases().map { Case(it.name, it.body) } +
+            ImageSearchChecks(this@SanitizerInstrumentation).cases().map { Case(it.name, it.body) }
+        val cases = allCases.filter { testPrefix?.let(it.name::startsWith) ?: true }
         var failures = 0
         try {
             cases.forEachIndexed { index, case ->

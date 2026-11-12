@@ -7,6 +7,10 @@
     <queries>
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="image/*" />
+        </intent>
     </queries>
 
     <application
@@ -21,6 +25,11 @@
         <activity android:name="com.tierruos.stickers.ui.StickerEditorActivity" android:exported="false" />
         <activity android:name="com.tierruos.stickers.ui.StickerPackDetailActivity" android:exported="false" />
         <activity android:name="com.tierruos.stickers.ui.MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -11,6 +11,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.TooltipCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.tierruos.stickers.R
@@ -25,6 +26,7 @@ import java.text.NumberFormat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,10 +59,18 @@ class StickerEditorActivity : TierruosActivity() {
     private var selectPackDialog: android.app.Dialog? = null
     private var loadingMessage = R.string.sanitizing_image
     private var pendingImport: String? = null
+    private val imageSearch by lazy { ImageSearchShare(this) }
+    private var searchPending = false
+    private var searchDeparted = false
+    private var clipboardBeforeSearch: String? = null
+    private var searchFile: String? = null
+    private var replacementImage: ImageSanitizerAndCompressor.CompressedImage? = null
+    private var searchDialog: AlertDialog? = null
 
     private data class Retained(
         val session: StickerCanvasView.Session?, val bytes: ByteArray?, val dirty: Boolean,
         val expectedVersion: Long?, val newPackId: String, val fileName: String, val mode: Int, val eraserWidth: Float,
+        val replacement: ImageSanitizerAndCompressor.CompressedImage?,
     )
 
     private val picker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -79,6 +89,10 @@ class StickerEditorActivity : TierruosActivity() {
         expectedVersion = savedInstanceState?.getLong("version")?.takeIf { it > 0 }
         picking = savedInstanceState?.getBoolean("picking") ?: false
         pendingImport = savedInstanceState?.getString("pendingImport")
+        searchPending = savedInstanceState?.getBoolean("searchPending") ?: false
+        searchDeparted = savedInstanceState?.getBoolean("searchDeparted") ?: false
+        clipboardBeforeSearch = savedInstanceState?.getString("clipboardBeforeSearch")
+        searchFile = savedInstanceState?.getString("searchFile")
         pastePending = if (savedInstanceState == null) intent.getBooleanExtra(EXTRA_PASTE, false) else false
         configureTools()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -86,6 +100,9 @@ class StickerEditorActivity : TierruosActivity() {
         })
         @Suppress("DEPRECATION")
         val retained = lastCustomNonConfigurationInstance as? Retained
+        replacementImage = retained?.replacement ?: savedInstanceState?.getByteArray("searchReplacement")?.let {
+            ImageSanitizerAndCompressor.CompressedImage(it, 512, 512, 0)
+        }
         if (retained != null) {
             newPackId = retained.newPackId; pendingFileName = retained.fileName
             expectedVersion = retained.expectedVersion; dirty = retained.dirty; lastBytes = retained.bytes
@@ -124,12 +141,15 @@ class StickerEditorActivity : TierruosActivity() {
         }
         else if (pendingImport != null) importUri(Uri.parse(pendingImport))
         renderControls()
+        uiScope.launch(Dispatchers.IO) { try { imageSearch.prune() } catch (_: Exception) { /* Best effort cache recovery. */ } }
     }
 
     private fun configureTools() {
         val canvas = binding.stickerCanvas
         binding.backButton.setOnClickListener { leaveEditor() }
         binding.pasteImage.setOnClickListener { pasteImage() }
+        TooltipCompat.setTooltipText(binding.searchTool, getString(R.string.search_image))
+        binding.searchTool.setOnClickListener { searchImage() }
         binding.chooseTool.setOnClickListener {
             if (!blocked()) {
                 picking = true; renderControls()
@@ -165,6 +185,7 @@ class StickerEditorActivity : TierruosActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus && searchPending) searchDeparted = true
         if (hasFocus && ::binding.isInitialized) refreshClipboard()
     }
     private fun refreshClipboard() {
@@ -173,6 +194,84 @@ class StickerEditorActivity : TierruosActivity() {
         binding.pasteImage.visibility = if (hasClipboardImage) View.VISIBLE else View.GONE
         renderControls()
         if (pastePending && !blocked()) { pastePending = false; pasteImage() }
+        checkSearchClipboard()
+    }
+
+    private fun searchImage() {
+        if (blocked() || !binding.stickerCanvas.hasImage || !hasWindowFocus()) return
+        val bitmap = try { binding.stickerCanvas.exportFinalBitmap() }
+            catch (_: IllegalStateException) { return }
+        task = true; renderControls(R.string.preparing_image_search)
+        uiScope.launch {
+            var created: String? = null
+            var launched = false
+            try {
+                withContext(Dispatchers.IO) { created = imageSearch.create(bitmap) }
+                val name = requireNotNull(created)
+                val uri = imageSearch.uri(name)
+                clipboardBeforeSearch = clipboard.candidate()?.toString()
+                searchPending = true; searchDeparted = false; searchFile = name
+                launched = imageSearch.launch(uri)
+                if (!launched) notice(R.string.image_search_unavailable)
+            } catch (canceled: CancellationException) { throw canceled }
+            catch (_: Exception) { notice(R.string.image_search_unavailable) }
+            finally {
+                bitmap.recycle()
+                if (!launched) {
+                    searchPending = false; searchFile = null
+                    created?.let { name -> withContext(NonCancellable + Dispatchers.IO) { releaseSearchFile(name) } }
+                }
+                task = false; renderControls()
+            }
+        }
+    }
+
+    private fun checkSearchClipboard() {
+        if (!hasWindowFocus() || blocked() || isFinishing || isDestroyed || searchDialog != null) return
+        if (dialog != null || selectPackDialog != null) return
+        replacementImage?.let { showSearchReplacement(it); return }
+        if (!searchPending || !searchDeparted || dialog != null || selectPackDialog != null) return
+        val result = clipboard.searchResult()
+        val isNew = ClipboardImages.isNewImage(result, clipboardBeforeSearch)
+        // Consume before showing UI so focus changes from the dialog cannot re-trigger it.
+        searchPending = false; searchDeparted = false
+        val file = searchFile; searchFile = null
+        if (isNew) { task = true; renderControls(R.string.sanitizing_image) }
+        uiScope.launch {
+            try {
+                file?.let { withContext(NonCancellable + Dispatchers.IO) { releaseSearchFile(it) } }
+                if (result.webLink) { notice(R.string.image_search_web_link); return@launch }
+                if (!isNew) return@launch
+                // Validate and snapshot once; acceptance installs these bytes, never reopens the URI.
+                replacementImage = engine.createSticker(requireNotNull(result.uri))
+            } catch (canceled: CancellationException) { throw canceled }
+            catch (error: Exception) { notice(errorMessage(error)) }
+            finally { if (isNew) { task = false; renderControls() } }
+        }
+    }
+
+    private fun showSearchReplacement(image: ImageSanitizerAndCompressor.CompressedImage) {
+        val modal = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.replace_image_title).setMessage(R.string.image_search_replace_body)
+            .setNegativeButton(R.string.keep_image_action, null)
+            .setPositiveButton(R.string.replace_action) { _, _ ->
+                if (!blocked()) {
+                    task = true; renderControls(R.string.sanitizing_image)
+                    uiScope.launch {
+                        try { installSanitized(image, true); binding.stickerCanvas.actionFeedback() }
+                        catch (canceled: CancellationException) { throw canceled }
+                        catch (error: Exception) { notice(errorMessage(error)) }
+                        finally { task = false; renderControls() }
+                    }
+                }
+            }.create()
+        searchDialog = modal
+        modal.setOnDismissListener { searchDialog = null; replacementImage = null }
+        modal.show()
+    }
+
+    private fun releaseSearchFile(name: String) {
+        try { imageSearch.release(name) } catch (_: Exception) { /* Retry orphan cleanup on a later launch. */ }
     }
     internal fun pasteImage() {
         if (blocked() || !hasWindowFocus()) return
@@ -460,6 +559,7 @@ class StickerEditorActivity : TierruosActivity() {
         binding.backButton.isEnabled = !saving
         binding.pasteImage.isEnabled = !blocked && hasClipboardImage
         binding.chooseTool.isEnabled = !blocked
+        binding.searchTool.isEnabled = image && !blocked && !searchPending
         listOf(binding.transformTool, binding.lassoTool, binding.eraserTool, binding.outlineTool, binding.textTool).forEach { it.isEnabled = image && !blocked }
         binding.undoTool.isEnabled = !blocked && binding.stickerCanvas.canUndo
         binding.transformTool.isActivated = binding.stickerCanvas.mode == StickerCanvasView.MODE_TRANSFORM
@@ -470,7 +570,11 @@ class StickerEditorActivity : TierruosActivity() {
         binding.eraserSize.isEnabled = !blocked
         dialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled = !blocked
         dialogConfirmButton?.isEnabled = !blocked
+        searchDialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled = !blocked
         binding.stickerCanvas.isEnabled = !task && !picking
+        if (!blocked && (replacementImage != null || (searchPending && searchDeparted))) {
+            binding.root.post { checkSearchClipboard() }
+        }
     }
     private fun leaveEditor() {
         if (saving) return
@@ -483,16 +587,24 @@ class StickerEditorActivity : TierruosActivity() {
     @Deprecated("Retained across configuration changes via platform non-configuration instance")
     @Suppress("DEPRECATION")
     override fun onRetainCustomNonConfigurationInstance(): Any = Retained(lastSession, lastBytes, dirty, expectedVersion,
-        newPackId, pendingFileName, binding.stickerCanvas.mode, binding.stickerCanvas.eraserWidthPx)
+        newPackId, pendingFileName, binding.stickerCanvas.mode, binding.stickerCanvas.eraserWidthPx, replacementImage)
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("newPackId", newPackId); outState.putString("pendingFileName", pendingFileName)
         expectedVersion?.let { outState.putLong("version", it) }
         outState.putBoolean("picking", picking)
+        outState.putBoolean("searchPending", searchPending)
+        outState.putBoolean("searchDeparted", searchDeparted)
+        outState.putString("clipboardBeforeSearch", clipboardBeforeSearch)
+        outState.putString("searchFile", searchFile)
+        replacementImage?.let { outState.putByteArray("searchReplacement", it.bytes) }
         pendingImport?.let { outState.putString("pendingImport", it) }
         lastBytes?.let { outState.putByteArray("checkpoint", it) }
         super.onSaveInstanceState(outState)
     }
     override fun onDestroy() {
+        searchDialog?.dismiss()
+        searchDialog = null
+        if (isFinishing) searchFile?.let { releaseSearchFile(it) }
         selectPackDialog?.dismiss()
         selectPackDialog = null
         dialog?.dismiss()

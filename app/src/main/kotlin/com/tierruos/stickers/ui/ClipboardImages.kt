@@ -11,7 +11,23 @@ class ClipboardImages(context: Context) {
 
     fun candidate(): Uri? = try { extract(manager?.primaryClip) } catch (_: RuntimeException) { null }
 
+    internal fun searchResult(): SearchResult = try { searchResult(manager?.primaryClip) }
+        catch (_: RuntimeException) { SearchResult(null, false) }
+
+    internal data class SearchResult(val uri: Uri?, val webLink: Boolean)
+
     companion object {
+        internal fun searchResult(clip: ClipData?): SearchResult {
+            val first = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)
+            val value = first?.uri?.toString() ?: first?.text?.takeIf { it.length <= 4096 }?.toString()
+            val scheme = value?.let(Uri::parse)?.scheme
+            val web = scheme == "http" || scheme == "https"
+            return SearchResult(if (web) null else extract(clip), web)
+        }
+
+        internal fun isNewImage(result: SearchResult, before: String?): Boolean =
+            result.uri != null && result.uri.toString() != before
+
         internal fun extract(clip: ClipData?): Uri? {
             if (clip == null) return null
             for (index in 0 until minOf(clip.itemCount, 8)) {

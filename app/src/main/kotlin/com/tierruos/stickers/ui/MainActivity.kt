@@ -2,6 +2,7 @@ package com.tierruos.stickers.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.content.ClipData
 import android.content.res.ColorStateList
 import android.graphics.drawable.InsetDrawable
 import android.net.Uri
@@ -13,6 +14,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.IntentCompat
 import androidx.core.view.ViewCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.shape.MaterialShapeDrawable
@@ -146,6 +148,21 @@ class MainActivity : TierruosActivity() {
                 }
             }
         }
+        if (savedInstanceState == null) receiveSharedImage(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        receiveSharedImage(intent)
+    }
+
+    private fun receiveSharedImage(incoming: Intent) {
+        if (incoming.action != Intent.ACTION_SEND) return
+        val uri = sharedImageUri(incoming)
+        if (uri == null) { notice(R.string.image_invalid); return }
+        // Never forward external extras, component names or arbitrary grants to the private editor.
+        editor.launch(sharedEditorIntent(this, uri))
     }
 
     override fun onResume() {
@@ -333,5 +350,20 @@ class MainActivity : TierruosActivity() {
         }
         if (::adapter.isInitialized) adapter.dispose()
         super.onDestroy()
+    }
+
+    companion object {
+        internal fun sharedImageUri(incoming: Intent): Uri? = try {
+            if (incoming.action != Intent.ACTION_SEND || incoming.type?.startsWith("image/") != true) null
+            else IntentCompat.getParcelableExtra(incoming, Intent.EXTRA_STREAM, Uri::class.java)?.takeIf {
+                it.scheme == "content" && !it.authority.isNullOrBlank() && it.toString().length <= 4096
+            }
+        } catch (_: RuntimeException) { null }
+
+        internal fun sharedEditorIntent(context: android.content.Context, uri: Uri): Intent =
+            Intent(context, StickerEditorActivity::class.java)
+                .putExtra(StickerEditorActivity.EXTRA_IMAGE_URI, uri.toString())
+                .apply { clipData = ClipData.newRawUri("image", uri) }
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 }

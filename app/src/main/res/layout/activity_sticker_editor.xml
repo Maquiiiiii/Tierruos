@@ -187,6 +187,16 @@
                     app:tint="@color/tool_tint" />
 
                 <ImageButton
+                    android:id="@+id/searchTool"
+                    style="@style/Widget.Tierruos.Tool"
+                    android:layout_width="@dimen/touch_target_min"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginEnd="@dimen/space_4"
+                    android:contentDescription="@string/search_image"
+                    android:src="@drawable/ic_image_search"
+                    app:tint="@color/tool_tint" />
+
+                <ImageButton
                     android:id="@+id/chooseTool"
                     style="@style/Widget.Tierruos.Tool"
                     android:layout_width="@dimen/touch_target_min"

@@ -6,13 +6,14 @@ App nativa en Kotlin para crear stickers de WhatsApp rápido, sin anuncios, sin 
 
 [Descargar APK universal (última versión)](https://github.com/Maquiiiiii/Tierruos/releases/latest/download/Tierruos-universal.apk) · [Todas las versiones y SHA-256](https://github.com/Maquiiiiii/Tierruos/releases)
 
-- **Versión actual:** `0.1.8` (`versionCode = 9`)
-- **Tamaño del APK firmado:** `1.491.063 bytes` (~1,49 MB)
+- **Versión del código:** `0.1.9` (`versionCode = 10`)
+- **Último APK publicado:** `0.1.8`, `1.491.063 bytes` (~1,49 MB). El enlace de descarga apunta a la última release publicada.
 - **Requisitos:** Android 7.0 (API 24) o superior
 
 ## Qué hace
 
 - Importa imágenes desde la galería (Photo Picker del sistema) o directamente desde el portapapeles.
+- Recibe imágenes compartidas desde otras apps y permite buscar el lienzo actual en Google Lens o Google. Al regresar, ofrece reemplazarlo por una nueva imagen válida del portapapeles, con confirmación para proteger las ediciones.
 - Permite recortar a mano alzada (lazo), borrar fondo, mover/rotar/escalar, agregar borde blanco y texto, con deshacer por pasos.
 - Cabecera con título `"TIERRUOS"` en mayúsculas y animación progresiva de letras de papel desplegable (`PaperUnfoldTitleView`), más botón Bento `"Crear nuevo paquete"` al pie de la lista de paquetes.
 - Flujo inteligente de guardado en el editor: guarda directamente si se abrió desde dentro de un paquete, o despliega la ventana flotante `"Guardar en carpeta"` (`SelectDestinationPackDialog`) cuando se crea desde la barra de navegación principal.

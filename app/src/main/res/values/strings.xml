@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="search_image">Buscar en Google Lens</string>
+    <string name="search_image_chooser">Buscar imagen con…</string>
+    <string name="preparing_image_search">Preparando imagen para buscar…</string>
+    <string name="image_search_unavailable">No hay una aplicación disponible para buscar esta imagen.</string>
+    <string name="image_search_web_link">Copiaste un enlace web. Elige «Copiar imagen» o descárgala e impórtala desde la galería.</string>
+    <string name="image_search_replace_body">¿Usar la imagen copiada? Se reiniciarán las ediciones y el historial del lienzo actual.</string>
+    <string name="keep_image_action">Conservar</string>
     <string name="app_name" translatable="false">Tierruos</string>
     <string name="nav_packs">Mis packs de stickers</string>
     <string name="nav_create">Crear un sticker</string>
